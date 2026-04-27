@@ -1,9 +1,9 @@
 {
-  "id": "qiaomu-blog-publisher",
-  "name": "Qiaomu Blog Publisher",
+  "id": "channing-blog-publisher",
+  "name": "Channing Blog Publisher",
   "version": "1.0.0",
   "minAppVersion": "1.0.0",
-  "description": "一键发布笔记到 Qiaomu Blog 草稿",
+  "description": "一键发布笔记到 Channing Blog 草稿",
   "author": "joeseesun",
   "authorUrl": "https://github.com/joeseesun",
   "isDesktopOnly": false

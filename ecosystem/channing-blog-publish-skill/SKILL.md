@@ -1,25 +1,25 @@
 ---
-name: qiaomu-blog-publish
-description: 将 Markdown 文件、文本内容或 URL 发布到自己的 Qiaomu Blog，支持分类选择、状态控制、本地和远程图片自动上传
-trigger: /qiaomu-blog-publish
+name: channing-blog-publish
+description: 将 Markdown 文件、文本内容或 URL 发布到自己的 Channing Blog，支持分类选择、状态控制、本地和远程图片自动上传
+trigger: /channing-blog-publish
 user_invocable: true
 ---
 
-# qiaomu-blog-publish: 发布内容到 Qiaomu Blog
+# channing-blog-publish: 发布内容到 Channing Blog
 
 ## 触发方式
 
 **Slash command:**
 
-- `/qiaomu-blog-publish path/to/file.md`
-- `/qiaomu-blog-publish https://example.com/article`
-- `/qiaomu-blog-publish` 然后粘贴 Markdown 或正文
+- `/channing-blog-publish path/to/file.md`
+- `/channing-blog-publish https://example.com/article`
+- `/channing-blog-publish` 然后粘贴 Markdown 或正文
 
 **自然语言：**
 
 - “发布到博客”
 - “发布成草稿”
-- “发到 Qiaomu Blog”
+- “发到 Channing Blog”
 - “把这篇文章发到自己的博客”
 - “publish to blog”
 - “publish draft”
@@ -30,9 +30,9 @@ user_invocable: true
 
 **Token 读取优先级：**
 
-1. 环境变量 `QIAOMU_BLOG_API_TOKEN`
+1. 环境变量 `CHANNING_BLOG_API_TOKEN`
 2. 环境变量 `QMBLOG_API_TOKEN`（兼容旧配置）
-3. 配置文件 `~/.claude/skills/qiaomu-blog-publish/config.json`
+3. 配置文件 `~/.claude/skills/channing-blog-publish/config.json`
 
 如果没有 token，提示用户：
 

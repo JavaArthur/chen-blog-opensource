@@ -1,6 +1,6 @@
-# qiaomu-blog-publish Skill
+# channing-blog-publish Skill
 
-这个目录放的是配套的 Claude Skill，用来把 Markdown、纯文本或网页内容直接发布到你自己的 Qiaomu Blog。
+这个目录放的是配套的 Claude Skill，用来把 Markdown、纯文本或网页内容直接发布到你自己的 Channing Blog。
 
 ## 能做什么
 
@@ -14,7 +14,7 @@
 把这个目录复制或软链接到：
 
 ```bash
-~/.claude/skills/qiaomu-blog-publish/
+~/.claude/skills/channing-blog-publish/
 ```
 
 至少需要保留：
@@ -28,7 +28,7 @@
 ### 1. 环境变量
 
 ```bash
-export QIAOMU_BLOG_API_TOKEN="qm_xxx"
+export CHANNING_BLOG_API_TOKEN="qm_xxx"
 ```
 
 ### 2. 配置文件
@@ -43,7 +43,7 @@ export QIAOMU_BLOG_API_TOKEN="qm_xxx"
 保存到：
 
 ```bash
-~/.claude/skills/qiaomu-blog-publish/config.json
+~/.claude/skills/channing-blog-publish/config.json
 ```
 
 API Token 可以在你自己的博客后台 `设置 -> API Token` 里生成。
@@ -51,12 +51,12 @@ API Token 可以在你自己的博客后台 `设置 -> API Token` 里生成。
 ## 使用示例
 
 ```bash
-/qiaomu-blog-publish ~/Documents/my-article.md
-/qiaomu-blog-publish https://example.com/article
+/channing-blog-publish ~/Documents/my-article.md
+/channing-blog-publish https://example.com/article
 ```
 
 也可以直接说：
 
 - “把这篇文章发布到博客”
 - “发布成草稿”
-- “发到 Qiaomu Blog”
+- “发到 Channing Blog”

@@ -1,7 +1,7 @@
 {
-  "name": "obsidian-qiaomu-blog-publisher",
+  "name": "obsidian-channing-blog-publisher",
   "version": "1.0.0",
-  "description": "Publish Obsidian notes to Qiaomu Blog as drafts",
+  "description": "Publish Obsidian notes to Channing Blog as drafts",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
