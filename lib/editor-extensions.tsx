@@ -785,6 +785,8 @@ export function FormattingBubble() {
           onMouseDown={(e) => e.preventDefault()}
           onClick={openAIModal}
           className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold transition bg-[var(--editor-accent)]/8 text-[var(--editor-accent)] hover:bg-[var(--editor-accent)]/15"
+          title="用 AI 改写或处理选中文本"
+          aria-label="用 AI 改写或处理选中文本"
         >
           <WandSparkles className="h-3.5 w-3.5" />
           Ask AI
@@ -804,6 +806,8 @@ export function FormattingBubble() {
           className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition ${
             mode === 'text' ? 'bg-[var(--editor-soft)]' : 'hover:bg-[var(--editor-soft)]'
           }`}
+          title="切换段落类型（标题 / 列表 / 引用 / 代码块）"
+          aria-label="切换段落类型"
         >
           <span className="text-[var(--editor-muted)]">
             {currentTextOption?.icon ?? <AlignLeft className="h-4 w-4" />}
@@ -824,6 +828,8 @@ export function FormattingBubble() {
               ? 'bg-[var(--editor-soft)] text-[var(--editor-accent)]'
               : 'text-[var(--editor-ink)] hover:bg-[var(--editor-soft)]'
           }`}
+          title={editor.isActive('link') ? '编辑或移除链接' : '为选中文本添加链接'}
+          aria-label={editor.isActive('link') ? '编辑或移除链接' : '为选中文本添加链接'}
         >
           <ExternalLink className="h-4 w-4" />
           Link
@@ -850,7 +856,8 @@ export function FormattingBubble() {
           className={`inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm transition ${
             mode === 'more' ? 'bg-[var(--editor-soft)]' : 'hover:bg-[var(--editor-soft)]'
           }`}
-          title="更多"
+          title="更多格式（斜体 / 行内代码 / 删除线 / 颜色 / 公式）"
+          aria-label="更多格式选项"
         >
           <MoreHorizontal className="h-4 w-4 text-[var(--editor-muted)]" />
         </button>
