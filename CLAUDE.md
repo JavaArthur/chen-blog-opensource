@@ -1,6 +1,98 @@
-# 晨启博客（channing-blog-opensource）— 项目手册
+# 晨启AI博客（channing-blog-opensource）— 项目手册
 
 > 面向未来的自己 / 接手开发者 / Claude。一页纸搞懂这个博客怎么跑、怎么部署、怎么恢复、怎么贡献。
+
+## 变更日志（Changelog）
+
+- 2026-04-27：初始化 Architect 扩展结构——新增「项目愿景」「架构总览」「模块结构图（Mermaid）」「模块索引」「编码规范」「AI 使用指引」等章节；同步为各子模块生成 `CLAUDE.md` 与面包屑导航。原有部署/已知坑/贡献上游等运营内容完整保留。
+- 2026-04-27：修复 D1 FTS5 SQLITE_CORRUPT_VTAB，搜索降级走 LIKE；新增「外链图片粘贴自动转存 R2」并已向上游开 PR。
+
+## 项目愿景（Project Vision）
+
+一个「自托管、可迁移、低成本」的个人博客系统，配套把「剪藏 / Obsidian 发布 / Claude Skill 发布」整条内容生产链路打通。核心目标：
+
+- **不被平台绑架**：数据都在自己的 D1 / R2，随时可导出迁移。
+- **单人低心智成本运维**：Cloudflare Workers + D1 + R2 全家桶，月费 $5 级别。
+- **内容工具链闭环**：浏览器剪藏、Obsidian 插件、Claude Skill 三种入口都直连同一份后端 API。
+
+## 架构总览（Architecture Overview）
+
+```
+┌───────────────┐   ┌──────────────────────┐   ┌───────────────────┐
+│ Content Input │ → │  Next.js 16 (App Router) │ → │ Cloudflare Worker │
+│  - Web 编辑器 │   │  - app/api/* (REST)      │   │  via OpenNext     │
+│  - Chrome 剪藏│   │  - app/admin/** (后台)   │   └─────────┬─────────┘
+│  - Obsidian   │   │  - app/[slug]  (前台)    │             │
+│  - Claude Skill│  └──────────┬───────────┘             │
+└───────────────┘              │                         │
+                               ▼                         ▼
+                       ┌───────────────┐         ┌──────────────┐
+                       │  lib/ 业务层   │         │  D1 (SQLite) │
+                       │  - repositories│◀───────▶│  posts/tags  │
+                       │  - editor-*    │         │  ai_config   │
+                       │  - remote-img  │         └──────────────┘
+                       └──────┬─────────┘                  ▲
+                              │                            │
+                              ▼                            │
+                       ┌───────────────┐                   │
+                       │  R2 Bucket    │                   │
+                       │  (images/*)   │───────────────────┘
+                       └───────────────┘
+```
+
+核心运行时：
+- **Next.js 16** App Router，通过 `@opennextjs/cloudflare` 打包成 Worker。
+- **D1** 存文章、标签、分类、AI 配置、API Token；FTS5 暂关（详见坑 1）。
+- **R2** 存所有图片与媒体；通过 `/api/images/[...key]` 统一读取。
+- **Tiptap 3.x** 编辑器，带外链图粘贴自动转存钩子。
+
+## 模块结构图（Module Structure）
+
+```mermaid
+graph TD
+    Root["(Root) 晨启AI博客"] --> App["app/"]
+    Root --> Lib["lib/"]
+    Root --> Components["components/"]
+    Root --> DB["db/"]
+    Root --> Scripts["scripts/"]
+    Root --> Ecosystem["ecosystem/"]
+
+    App --> AppApi["app/api (REST)"]
+    App --> AppAdmin["app/admin (后台)"]
+    App --> AppPublic["app/[slug] (前台)"]
+
+    Lib --> LibRepo["lib/repositories"]
+    Lib --> LibEditor["lib/editor-*"]
+
+    Ecosystem --> Clipper["chrome-clipper"]
+    Ecosystem --> Obsidian["obsidian-publisher"]
+    Ecosystem --> Skill["channing-blog-publish-skill"]
+
+    click App "./app/CLAUDE.md" "查看 app 模块文档"
+    click Lib "./lib/CLAUDE.md" "查看 lib 模块文档"
+    click Components "./components/CLAUDE.md" "查看 components 模块文档"
+    click DB "./db/CLAUDE.md" "查看 db 模块文档"
+    click Scripts "./scripts/CLAUDE.md" "查看 scripts 模块文档"
+    click Ecosystem "./ecosystem/CLAUDE.md" "查看 ecosystem 模块文档"
+    click Clipper "./ecosystem/chrome-clipper/CLAUDE.md" "查看 chrome-clipper 文档"
+    click Obsidian "./ecosystem/obsidian-publisher/CLAUDE.md" "查看 obsidian-publisher 文档"
+    click Skill "./ecosystem/channing-blog-publish-skill/CLAUDE.md" "查看 Claude Skill 文档"
+```
+
+## 模块索引（Module Index）
+
+| 模块路径 | 一句话职责 | 关键入口 | 文档 |
+|---|---|---|---|
+| `app/` | Next.js 路由层（API + 前台 + 后台） | `app/page.tsx`、`app/api/**/route.ts` | [app/CLAUDE.md](./app/CLAUDE.md) |
+| `lib/` | 业务与数据访问层（repositories、editor 钩子、远程图转存） | `lib/repositories/posts.ts` | [lib/CLAUDE.md](./lib/CLAUDE.md) |
+| `components/` | React UI 组件（编辑器、后台表单、公共 UI） | `components/editor/*` | [components/CLAUDE.md](./components/CLAUDE.md) |
+| `db/` | D1 schema、seed、迁移脚本 | `db/schema.sql`、`db/migrations/*.sql` | [db/CLAUDE.md](./db/CLAUDE.md) |
+| `scripts/` | Cloudflare 初始化/部署/预览/类型生成脚本 | `scripts/cf-deploy.sh` | [scripts/CLAUDE.md](./scripts/CLAUDE.md) |
+| `ecosystem/chrome-clipper/` | 浏览器剪藏扩展（Manifest V3） | `manifest.json`、`background.js` | [ecosystem/chrome-clipper/CLAUDE.md](./ecosystem/chrome-clipper/CLAUDE.md) |
+| `ecosystem/obsidian-publisher/` | Obsidian 一键发布插件 | `main.ts` | [ecosystem/obsidian-publisher/CLAUDE.md](./ecosystem/obsidian-publisher/CLAUDE.md) |
+| `ecosystem/channing-blog-publish-skill/` | Claude Skill 发布工具 | `SKILL.md` | [ecosystem/channing-blog-publish-skill/CLAUDE.md](./ecosystem/channing-blog-publish-skill/CLAUDE.md) |
+
+---
 
 ## 一、项目速览
 
@@ -288,10 +380,28 @@ gh pr create --repo joeseesun/qiaomu-blog-opensource \
 
 当前已开 PR：https://github.com/joeseesun/qiaomu-blog-opensource/pull/1（feat + 2 个 fix）。
 
-## 八、给 Claude / AI 助手的提示
+## 八、测试策略（Testing Strategy）
+
+- 框架：**Vitest 4**（`vitest.config.ts`）。跑法：`npm run test` / `npm run test:run`。
+- `tests/` 下残留部分上游遗留类型报错，跑 `npx tsc --noEmit` 时忽略，不要当作新引入问题。
+- 新业务代码**建议**补测，尤其是 `lib/repositories/**` 与 `lib/remote-image-rehost.ts` 这类纯逻辑。
+- 端到端/冒烟：目前靠 `npm run preview`（Worker runtime 本地预览）人工回归。
+
+## 九、编码规范（Coding Standards）
+
+- TypeScript strict。代码用英文，注释/文档用中文。
+- React 19 + Next.js App Router。Server Component 默认，带交互再 `'use client'`。
+- 样式用 Tailwind v4；避免大块内联 style。
+- 数据访问统一走 `lib/repositories/*`，**不要**在 `app/api/**/route.ts` 里直接写 SQL。
+- 新增敏感配置走 `wrangler secret put`，禁止硬编码。
+- 提交遵循 `~/.claude/rules/git-workflow.md` 的 Conventional Commits 约定。
+
+## 十、AI 使用指引（给 Claude / AI 助手）
 
 - 任何涉及 CF/D1/R2 的操作前，先 `set -a; source .env.local; set +a`。
 - 改 schema → 先写 `db/migrations/*.sql`，**再** 改 `db/schema.sql`，不要直接编辑 schema 后指望 cf-deploy 能处理。
 - 部署用 `npx opennextjs-cloudflare deploy -c wrangler.local.toml`，**不要用** `npm run deploy`（会重跑 schema）。
 - 本地跑 `npx tsc --noEmit` 时，`tests/` 下存在上游遗留的类型报错，不要当作新引入问题。
 - 发现新的 Cloudflare 平台坑，**加到本文件「已知坑」章节**，别光 fix 不 doc。
+- 改代码后主动跑 `npm run verify:quick`（lint + test + build）。
+- 回贡上游时保持 commit 干净、不夹带 rebrand；详见「七、贡献回上游」。

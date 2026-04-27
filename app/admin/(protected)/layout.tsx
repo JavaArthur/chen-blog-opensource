@@ -30,7 +30,7 @@ export default async function AdminProtectedLayout({
               className="text-lg tracking-tight text-[var(--editor-ink)] hover:text-[var(--editor-accent)] transition-colors duration-200"
               style={{ fontFamily: 'Georgia, "Noto Serif SC", serif', fontWeight: 500 }}
             >
-              晨启博客
+              晨启AI博客
             </Link>
             <span className="text-[var(--editor-line)] hidden sm:inline">/</span>
             <span className="text-[var(--stone-gray)] hidden sm:inline">管理后台</span>
@@ -44,6 +44,8 @@ export default async function AdminProtectedLayout({
             <Link
               href="/editor"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--editor-accent)] text-white rounded-lg text-sm font-medium hover:brightness-105 transition-all whitespace-nowrap"
+              title="写新文章"
+              aria-label="写新文章"
             >
               <PenLine className="w-4 h-4" />
               <span className="hidden md:inline">写文章</span>
@@ -52,6 +54,7 @@ export default async function AdminProtectedLayout({
               href="/"
               className={`${navCls} hidden md:inline-flex items-center gap-1`}
               title="查看博客"
+              aria-label="查看博客"
             >
               <ExternalLink className="w-4 h-4" />
             </Link>

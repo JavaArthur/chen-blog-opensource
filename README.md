@@ -158,7 +158,7 @@ npm run preview
 
 ## 作者
 
-- 晨启
+- 晨启AI
 - GitHub：<https://github.com/joeseesun>
 - X / Twitter：<https://x.com/vista8>
 - Blog：<https://blog.channing.ai/>
