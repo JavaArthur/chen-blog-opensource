@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { LogoutButton } from './LogoutButton'
 import { PenLine, ExternalLink } from 'lucide-react'
 import { AdminFooter } from '@/components/AdminFooter'
+import { Tooltip } from '@/components/Tooltip'
 
 export default async function AdminProtectedLayout({
   children,
@@ -41,23 +42,25 @@ export default async function AdminProtectedLayout({
             <Link href="/admin/categories" className={navCls}>分类</Link>
             <Link href="/admin/settings" className={navCls}>设置</Link>
             <div className="w-px h-4 bg-[var(--editor-line)] mx-2 hidden md:block" />
-            <Link
-              href="/editor"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--editor-accent)] text-white rounded-lg text-sm font-medium hover:brightness-105 transition-all whitespace-nowrap"
-              title="写新文章"
-              aria-label="写新文章"
-            >
-              <PenLine className="w-4 h-4" />
-              <span className="hidden md:inline">写文章</span>
-            </Link>
-            <Link
-              href="/"
-              className={`${navCls} hidden md:inline-flex items-center gap-1`}
-              title="查看博客"
-              aria-label="查看博客"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </Link>
+            <Tooltip label="写新文章">
+              <Link
+                href="/editor"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[var(--editor-accent)] text-white rounded-lg text-sm font-medium hover:brightness-105 transition-all whitespace-nowrap"
+                aria-label="写新文章"
+              >
+                <PenLine className="w-4 h-4" />
+                <span className="hidden md:inline">写文章</span>
+              </Link>
+            </Tooltip>
+            <Tooltip label="查看博客">
+              <Link
+                href="/"
+                className={`${navCls} hidden md:inline-flex items-center gap-1`}
+                aria-label="查看博客"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </Link>
+            </Tooltip>
             <LogoutButton />
           </nav>
         </div>

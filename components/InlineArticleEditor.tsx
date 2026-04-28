@@ -19,6 +19,7 @@ import { CategorySelector } from '@/components/CategorySelector'
 import { DownloadMarkdown } from '@/components/DownloadMarkdown'
 import { ImageGenerationModal } from '@/components/ImageGenerationModal'
 import { ImageCropModal } from '@/components/ImageCropModal'
+import { Tooltip } from '@/components/Tooltip'
 import { AIModal } from '@/lib/ai-modal'
 import { EDITOR_IMAGE_OPTIMIZE_OPTIONS, optimizeImageForUpload } from '@/lib/client-image'
 import {
@@ -393,24 +394,26 @@ export function InlineArticleEditor({
           </span>
         )}
         <div className="flex items-center gap-1">
-          <button
-            type="button"
-            onClick={(e) => openDocumentAIModal(e.currentTarget)}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)]"
-            title="Ask AI（基于标题和正文）"
-            aria-label="Ask AI（基于标题和正文）"
-          >
-            <WandSparkles className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={openDocumentImageModal}
-            className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)]"
-            title="生成图片"
-            aria-label="生成图片"
-          >
-            <ImageIcon className="h-3.5 w-3.5" />
-          </button>
+          <Tooltip label="Ask AI（基于标题和正文）">
+            <button
+              type="button"
+              onClick={(e) => openDocumentAIModal(e.currentTarget)}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)]"
+              aria-label="Ask AI（基于标题和正文）"
+            >
+              <WandSparkles className="h-3.5 w-3.5" />
+            </button>
+          </Tooltip>
+          <Tooltip label="生成图片">
+            <button
+              type="button"
+              onClick={openDocumentImageModal}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)]"
+              aria-label="生成图片"
+            >
+              <ImageIcon className="h-3.5 w-3.5" />
+            </button>
+          </Tooltip>
         </div>
         {feedback ? (
           <span className={`font-medium ${feedback.type === 'success' ? 'text-emerald-600' : 'text-rose-600'}`}>

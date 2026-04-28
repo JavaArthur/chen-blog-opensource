@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Search } from 'lucide-react'
+import { Tooltip } from '@/components/Tooltip'
 
 interface SearchResult {
   slug: string
@@ -108,14 +109,15 @@ export function SearchBar() {
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="p-2 text-[var(--editor-muted)] hover:text-[var(--editor-ink)] transition-colors"
-        title="搜索 (⌘K)"
-        aria-label="搜索"
-      >
-        <Search className="w-[18px] h-[18px]" />
-      </button>
+      <Tooltip label="搜索 (⌘K)">
+        <button
+          onClick={() => setIsOpen(true)}
+          className="p-2 text-[var(--editor-muted)] hover:text-[var(--editor-ink)] transition-colors"
+          aria-label="搜索"
+        >
+          <Search className="w-[18px] h-[18px]" />
+        </button>
+      </Tooltip>
 
       {isOpen && createPortal(
         <div

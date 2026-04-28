@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Dropdown } from '@/components/Dropdown'
 import { useToast } from '@/components/Toast'
 import { Modal } from '@/components/Modal'
+import { Tooltip } from '@/components/Tooltip'
 
 interface AiAction {
   id: number
@@ -218,22 +219,24 @@ export function AiActionsManager() {
               <tr key={action.id} className="border-t border-[var(--editor-line)] hover:bg-[var(--editor-panel)]">
                 <td className="px-3 py-2">
                   <div className="flex gap-0.5">
-                    <button
-                      type="button"
-                      disabled={idx === 0}
-                      onClick={() => moveAction(idx, 'up')}
-                      className="rounded px-1 text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] disabled:opacity-30"
-                      title="上移一行"
-                      aria-label="上移一行"
-                    >↑</button>
-                    <button
-                      type="button"
-                      disabled={idx === actions.length - 1}
-                      onClick={() => moveAction(idx, 'down')}
-                      className="rounded px-1 text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] disabled:opacity-30"
-                      title="下移一行"
-                      aria-label="下移一行"
-                    >↓</button>
+                    <Tooltip label="上移一行">
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => moveAction(idx, 'up')}
+                        className="rounded px-1 text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] disabled:opacity-30"
+                        aria-label="上移一行"
+                      >↑</button>
+                    </Tooltip>
+                    <Tooltip label="下移一行">
+                      <button
+                        type="button"
+                        disabled={idx === actions.length - 1}
+                        onClick={() => moveAction(idx, 'down')}
+                        className="rounded px-1 text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] disabled:opacity-30"
+                        aria-label="下移一行"
+                      >↓</button>
+                    </Tooltip>
                   </div>
                 </td>
                 <td className="px-3 py-2 font-mono text-xs text-[var(--editor-muted)]">{action.action_key}</td>

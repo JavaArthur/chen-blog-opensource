@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { ExternalLink, X } from 'lucide-react'
+import { Tooltip } from '@/components/Tooltip'
 
 interface ImageLightboxProps {
   src: string
@@ -39,15 +40,16 @@ export function ImageLightbox({ src, alt = '图片预览', onClose }: ImageLight
       aria-label={alt}
       onClick={onClose}
     >
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/25"
-        title="关闭（Esc）"
-        aria-label="关闭预览"
-      >
-        <X className="h-5 w-5" />
-      </button>
+      <Tooltip label="关闭（Esc）">
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/25"
+          aria-label="关闭预览"
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </Tooltip>
 
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img

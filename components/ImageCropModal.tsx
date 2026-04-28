@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import Cropper, { type Area } from 'react-easy-crop'
 import { Crop, Loader2, Move, Search, X } from 'lucide-react'
+import { Tooltip } from '@/components/Tooltip'
 import {
   cropImageForUpload,
   EDITOR_IMAGE_OPTIMIZE_OPTIONS,
@@ -98,16 +99,17 @@ export function ImageCropModal({
               <div className="text-base font-semibold text-[var(--editor-ink)]">裁剪图片</div>
               <div className="mt-1 text-sm text-[var(--editor-muted)]">拖动调整取景区域，裁完后可以替换当前图或插入新图。</div>
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={submitting}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-ink)] disabled:opacity-50"
-              title="关闭裁剪面板"
-              aria-label="关闭裁剪面板"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <Tooltip label="关闭裁剪面板">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={submitting}
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-ink)] disabled:opacity-50"
+                aria-label="关闭裁剪面板"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </Tooltip>
           </div>
 
           <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1.15fr)_320px]">

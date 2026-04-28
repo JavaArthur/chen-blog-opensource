@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Tooltip } from '@/components/Tooltip'
 
 interface NavLink {
   label: string
@@ -71,9 +72,9 @@ export function NavLinksEditor({ initialValue, onSave, saving }: Props) {
             />
             新窗口
           </label>
-          <button onClick={() => moveUp(idx)} disabled={idx === 0} className={`${btnCls} bg-[var(--editor-soft)] text-[var(--editor-muted)] hover:text-[var(--editor-ink)] disabled:opacity-30`} title="上移此链接" aria-label="上移此链接">↑</button>
-          <button onClick={() => moveDown(idx)} disabled={idx === links.length - 1} className={`${btnCls} bg-[var(--editor-soft)] text-[var(--editor-muted)] hover:text-[var(--editor-ink)] disabled:opacity-30`} title="下移此链接" aria-label="下移此链接">↓</button>
-          <button onClick={() => remove(idx)} className={`${btnCls} text-red-500 hover:bg-rose-500/10`} title="删除此链接" aria-label="删除此链接">删除</button>
+          <Tooltip label="上移此链接"><button onClick={() => moveUp(idx)} disabled={idx === 0} className={`${btnCls} bg-[var(--editor-soft)] text-[var(--editor-muted)] hover:text-[var(--editor-ink)] disabled:opacity-30`} aria-label="上移此链接">↑</button></Tooltip>
+          <Tooltip label="下移此链接"><button onClick={() => moveDown(idx)} disabled={idx === links.length - 1} className={`${btnCls} bg-[var(--editor-soft)] text-[var(--editor-muted)] hover:text-[var(--editor-ink)] disabled:opacity-30`} aria-label="下移此链接">↓</button></Tooltip>
+          <Tooltip label="删除此链接"><button onClick={() => remove(idx)} className={`${btnCls} text-red-500 hover:bg-rose-500/10`} aria-label="删除此链接">删除</button></Tooltip>
         </div>
       ))}
 

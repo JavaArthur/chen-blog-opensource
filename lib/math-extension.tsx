@@ -4,6 +4,7 @@ import { Node, mergeAttributes } from '@tiptap/core'
 import { ReactNodeViewRenderer, NodeViewWrapper, type ReactNodeViewProps } from '@tiptap/react'
 import { useState, useEffect, useRef } from 'react'
 import katex from 'katex'
+import { Tooltip } from '@/components/Tooltip'
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
@@ -87,9 +88,10 @@ function MathComponent(props: ReactNodeViewProps) {
       className={`math-node-rendered ${selected ? 'math-selected' : ''}`}
       data-type="math"
       onClick={() => setEditing(true)}
-      title="点击编辑公式"
     >
-      <div ref={renderRef} className={displayMode ? 'math-display' : 'math-inline'} />
+      <Tooltip label="点击编辑公式">
+        <div ref={renderRef} className={displayMode ? 'math-display' : 'math-inline'} />
+      </Tooltip>
     </NodeViewWrapper>
   )
 }

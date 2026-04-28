@@ -57,6 +57,7 @@ import {
   Sigma,
   WandSparkles,
 } from 'lucide-react'
+import { Tooltip } from '@/components/Tooltip'
 import { TwitterNode } from './twitter-extension'
 import { ResizableImage, type ResizableImageActionHandlers } from './resizable-image'
 import { MathNode } from './math-extension'
@@ -99,20 +100,21 @@ function BubbleIconButton({
   onClick: () => void
 }) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={onClick}
-      className={`inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium transition ${
-        active
-          ? 'bg-[var(--editor-accent)] text-[var(--editor-accent-ink)]'
-          : 'text-[var(--editor-ink)] hover:bg-[var(--editor-soft)]'
-      }`}
-    >
-      {children}
-    </button>
+    <Tooltip label={label}>
+      <button
+        type="button"
+        aria-label={label}
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={onClick}
+        className={`inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium transition ${
+          active
+            ? 'bg-[var(--editor-accent)] text-[var(--editor-accent-ink)]'
+            : 'text-[var(--editor-ink)] hover:bg-[var(--editor-soft)]'
+        }`}
+      >
+        {children}
+      </button>
+    </Tooltip>
   )
 }
 
@@ -780,17 +782,18 @@ export function FormattingBubble() {
       <div className="flex items-center gap-0.5 p-1">
 
         {/* Ask AI */}
-        <button
-          type="button"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={openAIModal}
-          className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold transition bg-[var(--editor-accent)]/8 text-[var(--editor-accent)] hover:bg-[var(--editor-accent)]/15"
-          title="用 AI 改写或处理选中文本"
-          aria-label="用 AI 改写或处理选中文本"
-        >
-          <WandSparkles className="h-3.5 w-3.5" />
-          Ask AI
-        </button>
+        <Tooltip label="用 AI 改写或处理选中文本">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={openAIModal}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-semibold transition bg-[var(--editor-accent)]/8 text-[var(--editor-accent)] hover:bg-[var(--editor-accent)]/15"
+            aria-label="用 AI 改写或处理选中文本"
+          >
+            <WandSparkles className="h-3.5 w-3.5" />
+            Ask AI
+          </button>
+        </Tooltip>
 
         <BubbleIconButton label="生成图片" onClick={openImageGenerationModal}>
           <ImagePlus className="h-4 w-4" />
@@ -799,41 +802,43 @@ export function FormattingBubble() {
         <div className="mx-0.5 h-5 w-px bg-[var(--editor-line)]" />
 
         {/* Text type selector */}
-        <button
-          type="button"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => toggleMode('text')}
-          className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition ${
-            mode === 'text' ? 'bg-[var(--editor-soft)]' : 'hover:bg-[var(--editor-soft)]'
-          }`}
-          title="切换段落类型（标题 / 列表 / 引用 / 代码块）"
-          aria-label="切换段落类型"
-        >
-          <span className="text-[var(--editor-muted)]">
-            {currentTextOption?.icon ?? <AlignLeft className="h-4 w-4" />}
-          </span>
-          <span className="font-medium text-[var(--editor-ink)]">
-            {currentTextOption?.label ?? '正文'}
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 text-[var(--editor-muted)]" />
-        </button>
+        <Tooltip label="切换段落类型（标题 / 列表 / 引用 / 代码块）">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => toggleMode('text')}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition ${
+              mode === 'text' ? 'bg-[var(--editor-soft)]' : 'hover:bg-[var(--editor-soft)]'
+            }`}
+            aria-label="切换段落类型"
+          >
+            <span className="text-[var(--editor-muted)]">
+              {currentTextOption?.icon ?? <AlignLeft className="h-4 w-4" />}
+            </span>
+            <span className="font-medium text-[var(--editor-ink)]">
+              {currentTextOption?.label ?? '正文'}
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 text-[var(--editor-muted)]" />
+          </button>
+        </Tooltip>
 
         {/* Link */}
-        <button
-          type="button"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => toggleMode('link')}
-          className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium transition ${
-            mode === 'link' || editor.isActive('link')
-              ? 'bg-[var(--editor-soft)] text-[var(--editor-accent)]'
-              : 'text-[var(--editor-ink)] hover:bg-[var(--editor-soft)]'
-          }`}
-          title={editor.isActive('link') ? '编辑或移除链接' : '为选中文本添加链接'}
-          aria-label={editor.isActive('link') ? '编辑或移除链接' : '为选中文本添加链接'}
-        >
-          <ExternalLink className="h-4 w-4" />
-          Link
-        </button>
+        <Tooltip label={editor.isActive('link') ? '编辑或移除链接' : '为选中文本添加链接'}>
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => toggleMode('link')}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium transition ${
+              mode === 'link' || editor.isActive('link')
+                ? 'bg-[var(--editor-soft)] text-[var(--editor-accent)]'
+                : 'text-[var(--editor-ink)] hover:bg-[var(--editor-soft)]'
+            }`}
+            aria-label={editor.isActive('link') ? '编辑或移除链接' : '为选中文本添加链接'}
+          >
+            <ExternalLink className="h-4 w-4" />
+            Link
+          </button>
+        </Tooltip>
 
         <div className="mx-0.5 h-5 w-px bg-[var(--editor-line)]" />
 
@@ -849,18 +854,19 @@ export function FormattingBubble() {
         </BubbleIconButton>
 
         {/* More */}
-        <button
-          type="button"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={() => toggleMode('more')}
-          className={`inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm transition ${
-            mode === 'more' ? 'bg-[var(--editor-soft)]' : 'hover:bg-[var(--editor-soft)]'
-          }`}
-          title="更多格式（斜体 / 行内代码 / 删除线 / 颜色 / 公式）"
-          aria-label="更多格式选项"
-        >
-          <MoreHorizontal className="h-4 w-4 text-[var(--editor-muted)]" />
-        </button>
+        <Tooltip label="更多格式（斜体 / 行内代码 / 删除线 / 颜色 / 公式）">
+          <button
+            type="button"
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => toggleMode('more')}
+            className={`inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm transition ${
+              mode === 'more' ? 'bg-[var(--editor-soft)]' : 'hover:bg-[var(--editor-soft)]'
+            }`}
+            aria-label="更多格式选项"
+          >
+            <MoreHorizontal className="h-4 w-4 text-[var(--editor-muted)]" />
+          </button>
+        </Tooltip>
 
         {/* Clear */}
         <BubbleIconButton label="清除格式" onClick={() => editor.chain().focus().clearNodes().unsetAllMarks().run()}>
@@ -978,49 +984,50 @@ export function FormattingBubble() {
                     : activeColorValue?.toLowerCase() === colorOption.value.toLowerCase()
 
                   return (
-                    <button
-                      key={`${colorTarget}-${colorOption.label}`}
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => {
-                        const chain = editor.chain().focus()
+                    <Tooltip key={`${colorTarget}-${colorOption.label}`} label={colorOption.label}>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          const chain = editor.chain().focus()
 
-                        if (colorTarget === 'text') {
-                          if (!colorOption.value) chain.unsetColor().run()
-                          else chain.setColor(colorOption.value).run()
-                        } else if (!colorOption.value) {
-                          chain.unsetHighlight().run()
-                        } else {
-                          chain.setHighlight({ color: colorOption.value }).run()
-                        }
+                          if (colorTarget === 'text') {
+                            if (!colorOption.value) chain.unsetColor().run()
+                            else chain.setColor(colorOption.value).run()
+                          } else if (!colorOption.value) {
+                            chain.unsetHighlight().run()
+                          } else {
+                            chain.setHighlight({ color: colorOption.value }).run()
+                          }
 
-                        setMode('main')
-                      }}
-                      className={`flex flex-col items-center gap-1 rounded-xl border px-1.5 py-2 transition ${
-                        isActive
-                          ? 'border-[var(--editor-accent)] bg-[var(--editor-accent)]/8'
-                          : 'border-[var(--editor-line)] hover:bg-[var(--editor-soft)]'
-                      }`}
-                      title={colorOption.label}
-                    >
-                      <span
-                        className="flex h-7 w-7 items-center justify-center rounded-lg border border-black/10 text-xs font-bold"
-                        style={colorTarget === 'text'
-                          ? {
-                              color: colorOption.value || 'var(--editor-ink)',
-                              background: colorOption.value ? `${colorOption.value}18` : 'white',
-                            }
-                          : {
-                              background: colorOption.value || 'white',
-                              color: 'var(--editor-ink)',
-                            }}
+                          setMode('main')
+                        }}
+                        className={`flex flex-col items-center gap-1 rounded-xl border px-1.5 py-2 transition ${
+                          isActive
+                            ? 'border-[var(--editor-accent)] bg-[var(--editor-accent)]/8'
+                            : 'border-[var(--editor-line)] hover:bg-[var(--editor-soft)]'
+                        }`}
+                        aria-label={colorOption.label}
                       >
-                        A
-                      </span>
-                      <span className="text-[10px] text-[var(--editor-muted)]">
-                        {colorOption.label.replace('色', '')}
-                      </span>
-                    </button>
+                        <span
+                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-black/10 text-xs font-bold"
+                          style={colorTarget === 'text'
+                            ? {
+                                color: colorOption.value || 'var(--editor-ink)',
+                                background: colorOption.value ? `${colorOption.value}18` : 'white',
+                              }
+                            : {
+                                background: colorOption.value || 'white',
+                                color: 'var(--editor-ink)',
+                              }}
+                        >
+                          A
+                        </span>
+                        <span className="text-[10px] text-[var(--editor-muted)]">
+                          {colorOption.label.replace('色', '')}
+                        </span>
+                      </button>
+                    </Tooltip>
                   )
                 })}
               </div>

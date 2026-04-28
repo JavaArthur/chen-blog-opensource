@@ -31,6 +31,7 @@ import {
 } from '@/lib/editor-extensions'
 import { generatePassword } from '@/lib/password'
 import { InputModal } from '@/components/InputModal'
+import { Tooltip } from '@/components/Tooltip'
 import { CategorySelector } from '@/components/CategorySelector'
 import { ImageGenerationModal } from '@/components/ImageGenerationModal'
 import { ImageCropModal } from '@/components/ImageCropModal'
@@ -1002,36 +1003,39 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={(e) => openDocumentAIModal(e.currentTarget)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
-              title="Ask AI（基于标题和正文）"
-              aria-label="Ask AI（基于标题和正文）"
-            >
-              <WandSparkles className="h-4 w-4" />
-            </button>
+            <Tooltip label="Ask AI（基于标题和正文）">
+              <button
+                type="button"
+                onClick={(e) => openDocumentAIModal(e.currentTarget)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
+                aria-label="Ask AI（基于标题和正文）"
+              >
+                <WandSparkles className="h-4 w-4" />
+              </button>
+            </Tooltip>
 
-            <button
-              type="button"
-              onClick={openDocumentImageModal}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
-              title="生成图片"
-              aria-label="生成图片"
-            >
-              <ImageIcon className="h-4 w-4" />
-            </button>
+            <Tooltip label="生成图片">
+              <button
+                type="button"
+                onClick={openDocumentImageModal}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
+                aria-label="生成图片"
+              >
+                <ImageIcon className="h-4 w-4" />
+              </button>
+            </Tooltip>
 
             {/* Sidebar toggle */}
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] transition"
-              title={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
-              aria-label={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
-            >
-              {sidebarOpen ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
-            </button>
+            <Tooltip label={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}>
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] transition"
+                aria-label={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
+              >
+                {sidebarOpen ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+              </button>
+            </Tooltip>
 
             <div className="mx-0.5 h-5 w-px bg-[var(--editor-line)]" />
 
@@ -1050,15 +1054,16 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
                   <Globe className="h-3.5 w-3.5" />
                   {saving ? '保存中…' : editSlug ? '更新' : '发布'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setPublishPanelOpen(!publishPanelOpen)}
-                  className="inline-flex items-center rounded-r-lg bg-[var(--editor-accent)] px-1.5 py-1.5 text-white border-l border-white/25 hover:brightness-105 transition"
-                  title="展开发布选项"
-                  aria-label="展开发布选项"
-                >
-                  <ChevronUp className={`h-3.5 w-3.5 transition-transform ${publishPanelOpen ? 'rotate-180' : ''}`} />
-                </button>
+                <Tooltip label="展开发布选项">
+                  <button
+                    type="button"
+                    onClick={() => setPublishPanelOpen(!publishPanelOpen)}
+                    className="inline-flex items-center rounded-r-lg bg-[var(--editor-accent)] px-1.5 py-1.5 text-white border-l border-white/25 hover:brightness-105 transition"
+                    aria-label="展开发布选项"
+                  >
+                    <ChevronUp className={`h-3.5 w-3.5 transition-transform ${publishPanelOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                </Tooltip>
               </div>
 
               {/* Publish panel dropdown */}
@@ -1120,7 +1125,7 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
               {feedback.slug && (
                 <a href={`/${feedback.slug}`} className="font-medium underline underline-offset-2">打开文章</a>
               )}
-              <button type="button" onClick={() => setFeedback(null)} className="ml-auto" title="关闭提示" aria-label="关闭提示"><X className="h-3.5 w-3.5" /></button>
+              <Tooltip label="关闭提示"><button type="button" onClick={() => setFeedback(null)} className="ml-auto" aria-label="关闭提示"><X className="h-3.5 w-3.5" /></button></Tooltip>
             </div>
           </div>
         )}
@@ -1242,18 +1247,19 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
 
         {/* ── Sidebar resize handle (desktop only) ── */}
         {showSidebar && (
-          <div
-            role="separator"
-            aria-orientation="vertical"
-            aria-label="调整侧边栏宽度"
-            onMouseDown={startSidebarResize}
-            onDoubleClick={resetSidebarWidth}
-            className={`hidden lg:block shrink-0 cursor-col-resize select-none group relative ${
-              isResizingSidebar ? 'bg-[var(--editor-line)]' : 'bg-transparent hover:bg-[var(--editor-line)]'
-            }`}
-            style={{ width: 6, position: 'sticky', top: '3.5rem', height: 'calc(100vh - 3.5rem)', zIndex: 20 }}
-            title="拖动调整宽度 · 双击恢复默认"
-          />
+          <Tooltip label="拖动调整宽度 · 双击恢复默认" placement="left">
+            <div
+              role="separator"
+              aria-orientation="vertical"
+              aria-label="调整侧边栏宽度"
+              onMouseDown={startSidebarResize}
+              onDoubleClick={resetSidebarWidth}
+              className={`hidden lg:block shrink-0 cursor-col-resize select-none group relative ${
+                isResizingSidebar ? 'bg-[var(--editor-line)]' : 'bg-transparent hover:bg-[var(--editor-line)]'
+              }`}
+              style={{ width: 6, position: 'sticky', top: '3.5rem', height: 'calc(100vh - 3.5rem)', zIndex: 20 }}
+            />
+          </Tooltip>
         )}
 
         {/* ── Right Sidebar ── */}
@@ -1273,33 +1279,38 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
               {/* Close button */}
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-[var(--stone-gray)] uppercase tracking-wider">文章设置</span>
-                <button type="button" onClick={() => setSidebarOpen(false)} className="text-[var(--stone-gray)] hover:text-[var(--editor-ink)]" title="收起侧边栏" aria-label="收起侧边栏">
-                  <X className="h-4 w-4" />
-                </button>
+                <Tooltip label="收起侧边栏" placement="left">
+                  <button type="button" onClick={() => setSidebarOpen(false)} className="text-[var(--stone-gray)] hover:text-[var(--editor-ink)]" aria-label="收起侧边栏">
+                    <X className="h-4 w-4" />
+                  </button>
+                </Tooltip>
               </div>
 
               {/* Tags */}
               <div>
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <label className="block text-xs font-semibold tracking-wider text-[var(--stone-gray)]">标签</label>
-                  <button
-                    type="button"
-                    onClick={() => void handleGenerateMetadata('tags')}
-                    disabled={isMetadataTargetPending('tags')}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--editor-line)] bg-[var(--editor-panel)] text-[var(--stone-gray)] transition hover:border-[var(--editor-accent)]/40 hover:text-[var(--editor-accent)] disabled:cursor-not-allowed disabled:opacity-50"
-                    title={isMetadataTargetPending('tags') ? '生成标签中…' : 'AI 生成标签'}
-                    aria-label={isMetadataTargetPending('tags') ? '生成标签中…' : 'AI 生成标签'}
-                  >
-                    {isMetadataTargetPending('tags') ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <WandSparkles className="h-3.5 w-3.5" />}
-                  </button>
+                  <Tooltip label={isMetadataTargetPending('tags') ? '生成标签中…' : 'AI 生成标签'} placement="left">
+                    <button
+                      type="button"
+                      onClick={() => void handleGenerateMetadata('tags')}
+                      disabled={isMetadataTargetPending('tags')}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--editor-line)] bg-[var(--editor-panel)] text-[var(--stone-gray)] transition hover:border-[var(--editor-accent)]/40 hover:text-[var(--editor-accent)] disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label={isMetadataTargetPending('tags') ? '生成标签中…' : 'AI 生成标签'}
+                    >
+                      {isMetadataTargetPending('tags') ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <WandSparkles className="h-3.5 w-3.5" />}
+                    </button>
+                  </Tooltip>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mb-2">
                   {tags.map((tag, idx) => (
                     <span key={tag} className="inline-flex items-center gap-1 rounded-md bg-[var(--editor-accent)]/8 px-2 py-0.5 text-xs text-[var(--editor-accent)]">
                       {tag}
-                      <button type="button" onClick={() => removeTag(idx)} className="hover:text-[var(--editor-ink)]" title="移除此标签" aria-label="移除此标签">
-                        <X className="h-3 w-3" />
-                      </button>
+                      <Tooltip label="移除此标签" placement="left">
+                        <button type="button" onClick={() => removeTag(idx)} className="hover:text-[var(--editor-ink)]" aria-label="移除此标签">
+                          <X className="h-3 w-3" />
+                        </button>
+                      </Tooltip>
                     </span>
                   ))}
                 </div>
@@ -1324,16 +1335,17 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
               <div>
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <label className="block text-xs font-semibold tracking-wider text-[var(--stone-gray)]">摘要</label>
-                  <button
-                    type="button"
-                    onClick={() => void handleGenerateMetadata('summary')}
-                    disabled={isMetadataTargetPending('summary')}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--editor-line)] bg-[var(--editor-panel)] text-[var(--stone-gray)] transition hover:border-[var(--editor-accent)]/40 hover:text-[var(--editor-accent)] disabled:cursor-not-allowed disabled:opacity-50"
-                    title={isMetadataTargetPending('summary') ? '生成摘要中…' : 'AI 生成摘要'}
-                    aria-label={isMetadataTargetPending('summary') ? '生成摘要中…' : 'AI 生成摘要'}
-                  >
-                    {isMetadataTargetPending('summary') ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <WandSparkles className="h-3.5 w-3.5" />}
-                  </button>
+                  <Tooltip label={isMetadataTargetPending('summary') ? '生成摘要中…' : 'AI 生成摘要'} placement="left">
+                    <button
+                      type="button"
+                      onClick={() => void handleGenerateMetadata('summary')}
+                      disabled={isMetadataTargetPending('summary')}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--editor-line)] bg-[var(--editor-panel)] text-[var(--stone-gray)] transition hover:border-[var(--editor-accent)]/40 hover:text-[var(--editor-accent)] disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label={isMetadataTargetPending('summary') ? '生成摘要中…' : 'AI 生成摘要'}
+                    >
+                      {isMetadataTargetPending('summary') ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <WandSparkles className="h-3.5 w-3.5" />}
+                    </button>
+                  </Tooltip>
                 </div>
                 <textarea
                   rows={12}
@@ -1354,27 +1366,28 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
               <div>
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <label className="block text-xs font-semibold tracking-wider text-[var(--stone-gray)]">封面图</label>
-                  <button
-                    type="button"
-                    onClick={() => void handleGenerateMetadata('cover')}
-                    disabled={isMetadataTargetPending('cover')}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--editor-line)] bg-[var(--editor-panel)] text-[var(--stone-gray)] transition hover:border-[var(--editor-accent)]/40 hover:text-[var(--editor-accent)] disabled:cursor-not-allowed disabled:opacity-50"
-                    title={isMetadataTargetPending('cover') ? '生成封面中…' : 'AI 生成封面'}
-                    aria-label={isMetadataTargetPending('cover') ? '生成封面中…' : 'AI 生成封面'}
-                  >
-                    {isMetadataTargetPending('cover') ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <WandSparkles className="h-3.5 w-3.5" />}
-                  </button>
+                  <Tooltip label={isMetadataTargetPending('cover') ? '生成封面中…' : 'AI 生成封面'} placement="left">
+                    <button
+                      type="button"
+                      onClick={() => void handleGenerateMetadata('cover')}
+                      disabled={isMetadataTargetPending('cover')}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--editor-line)] bg-[var(--editor-panel)] text-[var(--stone-gray)] transition hover:border-[var(--editor-accent)]/40 hover:text-[var(--editor-accent)] disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label={isMetadataTargetPending('cover') ? '生成封面中…' : 'AI 生成封面'}
+                    >
+                      {isMetadataTargetPending('cover') ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <WandSparkles className="h-3.5 w-3.5" />}
+                    </button>
+                  </Tooltip>
                 </div>
                 {coverImage ? (
                   <div className="relative rounded-md overflow-hidden border border-[var(--editor-line)] group" style={{ height: 120 }}>
                     {/* 整块点击放大 */}
-                    <button
-                      type="button"
-                      onClick={() => setCoverLightboxOpen(true)}
-                      className="block w-full h-full cursor-zoom-in"
-                      title="查看封面大图"
-                      aria-label="查看封面大图"
-                    >
+                    <Tooltip label="查看封面大图" placement="left">
+                      <button
+                        type="button"
+                        onClick={() => setCoverLightboxOpen(true)}
+                        className="block w-full h-full cursor-zoom-in"
+                        aria-label="查看封面大图"
+                      >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={coverImage} alt="封面预览" className="w-full h-full object-cover" />
                       {/* hover 遮罩 + 居中文案 */}
@@ -1385,41 +1398,45 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
                         </span>
                       </div>
                     </button>
+                    </Tooltip>
 
                     {/* 右上角放大镜按钮（始终可点，醒目） */}
-                    <button
-                      type="button"
-                      onClick={() => setCoverLightboxOpen(true)}
-                      className="absolute right-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white opacity-80 transition hover:bg-black/75 hover:opacity-100"
-                      title="查看封面大图"
-                      aria-label="查看封面大图"
-                    >
-                      <Maximize2 className="h-3.5 w-3.5" />
-                    </button>
+                    <Tooltip label="查看封面大图" placement="left">
+                      <button
+                        type="button"
+                        onClick={() => setCoverLightboxOpen(true)}
+                        className="absolute right-1.5 top-1.5 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white opacity-80 transition hover:bg-black/75 hover:opacity-100"
+                        aria-label="查看封面大图"
+                      >
+                        <Maximize2 className="h-3.5 w-3.5" />
+                      </button>
+                    </Tooltip>
 
                     {/* 悬停时显示的操作按钮（左下角，避开放大镜） */}
                     <div className="pointer-events-none absolute bottom-1.5 left-1.5 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        type="button"
-                        onClick={() => coverInputRef.current?.click()}
-                        className="pointer-events-auto flex items-center justify-center w-8 h-8 rounded-full bg-[var(--editor-panel)] text-[var(--editor-ink)] hover:bg-[var(--editor-soft)] transition shadow"
-                        title="重新上传封面"
-                        aria-label="重新上传封面"
-                      >
-                        <ImageIcon className="h-4 w-4" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setCoverImage('')
-                          markDirty({ coverImage: '' })
-                        }}
-                        className="pointer-events-auto flex items-center justify-center w-8 h-8 rounded-full bg-[var(--editor-panel)] text-rose-600 hover:bg-[var(--editor-soft)] transition shadow"
-                        title="删除封面"
-                        aria-label="删除封面"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
+                      <Tooltip label="重新上传封面" placement="left">
+                        <button
+                          type="button"
+                          onClick={() => coverInputRef.current?.click()}
+                          className="pointer-events-auto flex items-center justify-center w-8 h-8 rounded-full bg-[var(--editor-panel)] text-[var(--editor-ink)] hover:bg-[var(--editor-soft)] transition shadow"
+                          aria-label="重新上传封面"
+                        >
+                          <ImageIcon className="h-4 w-4" />
+                        </button>
+                      </Tooltip>
+                      <Tooltip label="删除封面" placement="left">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCoverImage('')
+                            markDirty({ coverImage: '' })
+                          }}
+                          className="pointer-events-auto flex items-center justify-center w-8 h-8 rounded-full bg-[var(--editor-panel)] text-rose-600 hover:bg-[var(--editor-soft)] transition shadow"
+                          aria-label="删除封面"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </Tooltip>
                     </div>
                   </div>
                 ) : (
@@ -1444,16 +1461,17 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
               <div>
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <label className="block text-xs font-semibold tracking-wider text-[var(--stone-gray)]">链接</label>
-                  <button
-                    type="button"
-                    onClick={() => void handleGenerateMetadata('slug')}
-                    disabled={isMetadataTargetPending('slug')}
-                    className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--editor-line)] bg-[var(--editor-panel)] text-[var(--stone-gray)] transition hover:border-[var(--editor-accent)]/40 hover:text-[var(--editor-accent)] disabled:cursor-not-allowed disabled:opacity-50"
-                    title={isMetadataTargetPending('slug') ? '生成 slug 中…' : 'AI 生成 slug'}
-                    aria-label={isMetadataTargetPending('slug') ? '生成 slug 中…' : 'AI 生成 slug'}
-                  >
-                    {isMetadataTargetPending('slug') ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <WandSparkles className="h-3.5 w-3.5" />}
-                  </button>
+                  <Tooltip label={isMetadataTargetPending('slug') ? '生成 slug 中…' : 'AI 生成 slug'} placement="left">
+                    <button
+                      type="button"
+                      onClick={() => void handleGenerateMetadata('slug')}
+                      disabled={isMetadataTargetPending('slug')}
+                      className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-[var(--editor-line)] bg-[var(--editor-panel)] text-[var(--stone-gray)] transition hover:border-[var(--editor-accent)]/40 hover:text-[var(--editor-accent)] disabled:cursor-not-allowed disabled:opacity-50"
+                      aria-label={isMetadataTargetPending('slug') ? '生成 slug 中…' : 'AI 生成 slug'}
+                    >
+                      {isMetadataTargetPending('slug') ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <WandSparkles className="h-3.5 w-3.5" />}
+                    </button>
+                  </Tooltip>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-[var(--stone-gray)] shrink-0">slug:</span>

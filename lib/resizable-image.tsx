@@ -1,5 +1,6 @@
 'use client'
 
+import { Tooltip } from '@/components/Tooltip'
 import { useToast } from '@/components/Toast'
 import { mergeAttributes } from '@tiptap/core'
 import Image, { type ImageOptions } from '@tiptap/extension-image'
@@ -312,24 +313,25 @@ function ResizableImageView(props: any) {
         />
 
         {selected ? (
-          <button
-            type="button"
-            onMouseDown={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-            }}
-            onClick={(event) => {
-              event.preventDefault()
-              event.stopPropagation()
-              const rect = event.currentTarget.getBoundingClientRect()
-              openMenu(rect.left, rect.bottom + 8)
-            }}
-            className="absolute -right-2 -top-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--editor-line)] bg-white text-[var(--editor-muted)] shadow-sm transition hover:text-[var(--editor-ink)]"
-            aria-label="打开图片菜单"
-            title="打开图片菜单"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
+          <Tooltip label="打开图片菜单">
+            <button
+              type="button"
+              onMouseDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+              }}
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                const rect = event.currentTarget.getBoundingClientRect()
+                openMenu(rect.left, rect.bottom + 8)
+              }}
+              className="absolute -right-2 -top-2 inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--editor-line)] bg-white text-[var(--editor-muted)] shadow-sm transition hover:text-[var(--editor-ink)]"
+              aria-label="打开图片菜单"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+          </Tooltip>
         ) : null}
 
         {selected && (

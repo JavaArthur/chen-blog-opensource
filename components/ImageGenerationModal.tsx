@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react'
 import { Dropdown } from '@/components/Dropdown'
+import { Tooltip } from '@/components/Tooltip'
 import { useToast } from '@/components/Toast'
 import {
   appendStoredHistoryItem,
@@ -430,15 +431,16 @@ export function ImageGenerationModal({
             <div className="min-w-0">
               <div className="text-base font-semibold text-[var(--editor-ink)]">生成图片</div>
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-ink)]"
-              title="关闭生成图片面板"
-              aria-label="关闭生成图片面板"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            <Tooltip label="关闭生成图片面板">
+              <button
+                type="button"
+                onClick={onClose}
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-ink)]"
+                aria-label="关闭生成图片面板"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </Tooltip>
           </div>
 
           <div className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
@@ -674,23 +676,24 @@ export function ImageGenerationModal({
                         const previewUrl = item.image.variants?.content || item.image.url
                         return (
                           <div key={item.id} className="overflow-hidden rounded-2xl border border-[var(--editor-line)] bg-white">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setResult(item.image)
-                                setHistoryOpen(false)
-                                setShowRevisedPrompt(false)
-                              }}
-                              className="block w-full"
-                              title="预览这张历史图片"
-                              aria-label="预览这张历史图片"
-                            >
+                            <Tooltip label="预览这张历史图片">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setResult(item.image)
+                                  setHistoryOpen(false)
+                                  setShowRevisedPrompt(false)
+                                }}
+                                className="block w-full"
+                                aria-label="预览这张历史图片"
+                              >
                               <img
                                 src={previewUrl}
                                 alt={item.image.alt}
                                 className="aspect-[4/3] w-full object-cover"
                               />
                             </button>
+                            </Tooltip>
                             <div className="space-y-2 px-3 py-3">
                               <div className="line-clamp-2 text-sm font-medium text-[var(--editor-ink)]">
                                 {item.promptLabel}
