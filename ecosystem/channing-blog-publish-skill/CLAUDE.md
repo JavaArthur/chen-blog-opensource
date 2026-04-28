@@ -70,4 +70,5 @@ Token 在博客后台 `设置 -> API Token` 生成。
 
 ## 变更日志
 
+- 2026-04-28：SKILL.md v2 — 对齐后端完整字段、修正 Edit URL (`?edit=` 不是 `?slug=`)、补错误码表、加 `--yes` / `--json` / `--dry-run`、外链图走 `/api/uploads/from-url`、frontmatter 支持 unlisted / password / tags / cover / slug。
 - 2026-04-27：初始化模块文档。
