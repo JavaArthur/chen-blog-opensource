@@ -22,6 +22,11 @@ export const THEME_OPTIONS = [
     label: 'AI 终端',
     description: '偏技术感的深色终端界面',
   },
+  {
+    id: 'clarity',
+    label: '清透',
+    description: '苹果风蓝白极简，产品感十足',
+  },
 ] as const
 
 export type Theme = (typeof THEME_OPTIONS)[number]['id']
