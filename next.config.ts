@@ -5,7 +5,8 @@ import type { NextConfig } from "next";
 void initOpenNextCloudflareForDev();
 
 const nextConfig: NextConfig = {
-  // 图片优化（Cloudflare 有自己的优化）
+  poweredByHeader: false,
+
   images: {
     unoptimized: true,
   },
@@ -14,10 +15,18 @@ const nextConfig: NextConfig = {
     root: resolve(process.cwd()),
   },
 
-  // 移除客户端环境变量暴露（安全风险）
-  // 敏感信息应该只在服务端使用
+  headers: async () => [
+    {
+      source: '/(.*)',
+      headers: [
+        { key: 'X-Content-Type-Options', value: 'nosniff' },
+        { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+        { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+      ],
+    },
+  ],
 
-  // 减少构建时的 worker 数量，避免 MaxListenersExceededWarning
   experimental: {
     workerThreads: false,
     cpus: 1,

@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
       return jsonError('slug 已存在，请换一个', 409)
     }
     console.error('Save error:', error)
-    return jsonError('保存失败: ' + (error as Error).message, 500)
+    return jsonError('保存失败', 500)
   }
 }
 
@@ -179,6 +179,6 @@ export async function PATCH(req: NextRequest) {
       return jsonError('slug 已存在，请换一个', 409)
     }
     console.error('Auto-save error:', error)
-    return jsonError('自动保存失败: ' + (error as Error).message, 500)
+    return jsonError('自动保存失败', 500)
   }
 }

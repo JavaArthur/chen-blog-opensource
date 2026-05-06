@@ -216,6 +216,13 @@ CREATE TABLE IF NOT EXISTS api_tokens (
 
 CREATE INDEX IF NOT EXISTS idx_api_tokens_token ON api_tokens(token);
 
+-- 登录限速表
+CREATE TABLE IF NOT EXISTS login_attempts (
+  ip TEXT NOT NULL,
+  attempted_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
+);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_time ON login_attempts(ip, attempted_at);
+
 -- 插入默认分类
 INSERT OR IGNORE INTO categories (name, slug) VALUES
   ('未分类', 'uncategorized'),

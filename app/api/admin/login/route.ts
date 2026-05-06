@@ -6,6 +6,16 @@ import {
   COOKIE_MAX_AGE,
   getAdminAuthConfigError,
 } from '@/lib/admin-auth'
+import { getAppCloudflareEnv } from '@/lib/cloudflare'
+import { checkLoginRateLimit, recordFailedLogin, cleanupOldAttempts } from '@/lib/rate-limit'
+
+function getClientIp(req: NextRequest): string {
+  return (
+    req.headers.get('cf-connecting-ip') ||
+    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    'unknown'
+  )
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,9 +24,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: configError }, { status: 503 })
     }
 
+    const env = await getAppCloudflareEnv()
+    const db = env.DB!
+    const ip = getClientIp(req)
+
+    // 限速检查
+    const { allowed, retryAfter } = await checkLoginRateLimit(db, ip)
+    if (!allowed) {
+      return NextResponse.json(
+        { error: '登录尝试过多，请5分钟后重试' },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      )
+    }
+
     const { password } = (await req.json()) as { password?: string }
 
     if (!password || !(await verifyPassword(password))) {
+      await recordFailedLogin(db, ip)
+      // 顺带清理过期记录（非阻塞）
+      cleanupOldAttempts(db).catch(() => {})
       return NextResponse.json({ error: '密码错误' }, { status: 401 })
     }
 
@@ -28,6 +54,7 @@ export async function POST(req: NextRequest) {
 
     response.cookies.set(COOKIE_NAME, token, {
       httpOnly: true,
+      secure: true,
       path: '/',
       maxAge: COOKIE_MAX_AGE,
       sameSite: 'lax',

@@ -2,26 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAppCloudflareEnv } from '@/lib/cloudflare'
 import { authenticateRequest } from '@/lib/admin-auth'
 import { nanoid } from 'nanoid'
-
-type ImageBucket = {
-  put: (
-    key: string,
-    value: File | ArrayBuffer | ArrayBufferView | ReadableStream,
-    options?: {
-      httpMetadata?: {
-        contentType?: string
-        cacheControl?: string
-      }
-      customMetadata?: Record<string, string>
-    }
-  ) => Promise<void>
-  get: (key: string) => Promise<{ customMetadata?: Record<string, string> } | null>
-}
-
-type RuntimeEnv = {
-  IMAGES?: ImageBucket
-  ENABLE_CF_IMAGE_PIPELINE?: string
-}
+import { readFlag, sanitizeFilename, buildAssetUrls, type RuntimeEnv } from '@/lib/upload-utils'
 
 const MAX_IMAGE_SIZE = 25 * 1024 * 1024 // 25MB — remote fetch to R2
 const FETCH_TIMEOUT_MS = 15_000
@@ -45,30 +26,52 @@ const EXT_TO_MIME: Record<string, string> = {
   avif: 'image/avif',
 }
 
-function readFlag(value: unknown): boolean {
-  return typeof value === 'string' && ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase())
-}
-
-function sanitizeFilename(filename: string) {
-  const trimmed = filename.trim().toLowerCase()
-  const safe = trimmed.replace(/[^a-z0-9._-]+/g, '-').replace(/-+/g, '-')
-  return safe || 'image'
-}
-
-function buildAssetUrls(encodedKey: string, cloudflareEnabled: boolean) {
-  const baseUrl = `/api/images/${encodedKey}`
-  return {
-    raw: baseUrl,
-    content: cloudflareEnabled ? `${baseUrl}?w=1600&q=85&format=webp` : baseUrl,
-    thumb: cloudflareEnabled ? `${baseUrl}?w=960&q=82&format=webp` : baseUrl,
-    cover: cloudflareEnabled ? `${baseUrl}?w=1600&h=900&fit=cover&q=84&format=webp` : baseUrl,
-  }
-}
-
 async function sha256Hex(buffer: ArrayBuffer): Promise<string> {
   const hashBuffer = await crypto.subtle.digest('SHA-256', buffer)
   const hashArray = Array.from(new Uint8Array(hashBuffer))
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('').slice(0, 16)
+}
+
+function isPrivateHost(hostname: string): boolean {
+  const lower = hostname.toLowerCase()
+
+  // localhost variants
+  if (lower === 'localhost' || lower.endsWith('.localhost')) return true
+
+  // IPv6 loopback and private ranges
+  // Strip brackets if present (e.g. from URL parsing)
+  const bare = lower.startsWith('[') && lower.endsWith(']') ? lower.slice(1, -1) : lower
+  if (bare === '::1' || bare === '0:0:0:0:0:0:0:1') return true
+  // fc00::/7 → starts with fc or fd
+  if (/^f[cd][0-9a-f]{0,2}:/.test(bare)) return true
+  // fe80::/10 → link-local
+  if (/^fe[89ab][0-9a-f]?:/.test(bare)) return true
+
+  // IPv4 checks
+  const ipv4Match = bare.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
+  if (ipv4Match) {
+    const [, a, b] = ipv4Match.map(Number)
+    if (a === 127) return true                        // 127.0.0.0/8
+    if (a === 10) return true                         // 10.0.0.0/8
+    if (a === 172 && b >= 16 && b <= 31) return true  // 172.16.0.0/12
+    if (a === 192 && b === 168) return true           // 192.168.0.0/16
+    if (a === 169 && b === 254) return true           // 169.254.0.0/16
+    if (a === 0) return true                          // 0.0.0.0/8
+  }
+
+  // IPv4-mapped IPv6 (::ffff:x.x.x.x)
+  const mappedMatch = bare.match(/^::ffff:(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
+  if (mappedMatch) {
+    const [, a, b] = mappedMatch.map(Number)
+    if (a === 127) return true
+    if (a === 10) return true
+    if (a === 172 && b >= 16 && b <= 31) return true
+    if (a === 192 && b === 168) return true
+    if (a === 169 && b === 254) return true
+    if (a === 0) return true
+  }
+
+  return false
 }
 
 function extractFilenameFromUrl(url: URL): string {
@@ -89,7 +92,7 @@ function inferContentType(rawType: string | null, url: URL): string | null {
 
 export async function POST(req: NextRequest) {
   try {
-    const env = (await getAppCloudflareEnv()) as RuntimeEnv & { DB?: D1Database }
+    const env = (await getAppCloudflareEnv()) as RuntimeEnv
     const isAuthenticated = await authenticateRequest(req, env?.DB)
 
     if (!isAuthenticated) {
@@ -119,6 +122,11 @@ export async function POST(req: NextRequest) {
 
     if (sourceUrl.protocol !== 'http:' && sourceUrl.protocol !== 'https:') {
       return NextResponse.json({ error: '仅支持 http/https' }, { status: 400 })
+    }
+
+    // SSRF protection: block private/reserved IP ranges and localhost
+    if (isPrivateHost(sourceUrl.hostname)) {
+      return NextResponse.json({ error: '不允许访问内网地址' }, { status: 403 })
     }
 
     // Fetch without Referer to bypass hotlink-protection; no cookies.
@@ -225,7 +233,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Import from URL error:', error)
     return NextResponse.json(
-      { error: '远程图片导入失败: ' + (error as Error).message },
+      { error: '远程图片导入失败' },
       { status: 500 }
     )
   }

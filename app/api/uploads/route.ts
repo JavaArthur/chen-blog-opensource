@@ -2,26 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getAppCloudflareEnv } from '@/lib/cloudflare'
 import { authenticateRequest } from '@/lib/admin-auth'
 import { nanoid } from 'nanoid'
-
-type ImageBucket = {
-  put: (
-    key: string,
-    value: File | ArrayBuffer | ArrayBufferView | ReadableStream,
-    options?: {
-      httpMetadata?: {
-        contentType?: string
-        cacheControl?: string
-      }
-      customMetadata?: Record<string, string>
-    }
-  ) => Promise<void>
-  get: (key: string) => Promise<{ customMetadata?: Record<string, string> } | null>
-}
-
-type RuntimeEnv = {
-  IMAGES?: ImageBucket
-  ENABLE_CF_IMAGE_PIPELINE?: string
-}
+import { readFlag, sanitizeFilename, buildAssetUrls, type RuntimeEnv } from '@/lib/upload-utils'
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB (Cloudflare Workers limit)
 
@@ -44,31 +25,11 @@ const ALLOWED_TYPES: Record<string, string[]> = {
 
 const ALL_ALLOWED = Object.values(ALLOWED_TYPES).flat()
 
-function readFlag(value: unknown): boolean {
-  return typeof value === 'string' && ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase())
-}
-
 function getFileCategory(mimeType: string): string {
   for (const [cat, types] of Object.entries(ALLOWED_TYPES)) {
     if (types.includes(mimeType)) return cat
   }
   return 'document'
-}
-
-function sanitizeFilename(filename: string) {
-  const trimmed = filename.trim().toLowerCase()
-  const safe = trimmed.replace(/[^a-z0-9._-]+/g, '-').replace(/-+/g, '-')
-  return safe || 'file'
-}
-
-function buildAssetUrls(encodedKey: string, cloudflareEnabled: boolean) {
-  const baseUrl = `/api/images/${encodedKey}`
-  return {
-    raw: baseUrl,
-    content: cloudflareEnabled ? `${baseUrl}?w=1600&q=85&format=webp` : baseUrl,
-    thumb: cloudflareEnabled ? `${baseUrl}?w=960&q=82&format=webp` : baseUrl,
-    cover: cloudflareEnabled ? `${baseUrl}?w=1600&h=900&fit=cover&q=84&format=webp` : baseUrl,
-  }
 }
 
 async function calculateHash(file: File): Promise<string> {
@@ -81,7 +42,7 @@ async function calculateHash(file: File): Promise<string> {
 export async function POST(req: NextRequest) {
   try {
     // 认证：Cookie OR Bearer Token
-    const env = (await getAppCloudflareEnv()) as RuntimeEnv & { DB?: D1Database }
+    const env = (await getAppCloudflareEnv()) as RuntimeEnv
     const isAuthenticated = await authenticateRequest(req, env?.DB)
 
     if (!isAuthenticated) {
@@ -197,7 +158,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json(
-      { error: '文件上传失败: ' + (error as Error).message },
+      { error: '文件上传失败' },
       { status: 500 }
     )
   }
