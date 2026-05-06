@@ -16,6 +16,7 @@ export {
   deletePost,
   getPostAiSnapshot,
   getPostBySlug,
+  type GetPostBySlugOptions,
   getPosts,
   getPostsByCategory,
   getPostsCount,

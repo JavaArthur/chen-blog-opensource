@@ -12,6 +12,7 @@ const PAGE_SIZE = 25
 const BASE_URL = getSiteUrl()
 
 export const dynamicParams = true
+// ISR: 需要 open-next.config.ts 配置 incrementalCache + tagCache 才能生效
 export const revalidate = 3600
 
 function formatDate(ts: number) {

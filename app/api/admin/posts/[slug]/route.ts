@@ -23,7 +23,7 @@ export async function GET(req: NextRequest, { params }: Ctx) {
   const route = await getRouteContextWithDb('DB not configured')
   if (!route.ok) return route.response
 
-  const post = await getPostBySlug(route.db, slug)
+  const post = await getPostBySlug(route.db, slug, undefined, { includeUnpublished: true })
   if (!post) return jsonError('文章不存在', 404)
 
   return jsonOk(post)
@@ -40,7 +40,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   if (!route.ok) return route.response
   const { env, db, ctx } = route
 
-  const post = await getPostBySlug(db, slug)
+  const post = await getPostBySlug(db, slug, undefined, { includeUnpublished: true })
   if (!post) return jsonError('文章不存在', 404)
 
   try {
@@ -131,7 +131,7 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
   const { env, db, ctx } = route
 
   try {
-    const post = await getPostBySlug(db, slug)
+    const post = await getPostBySlug(db, slug, undefined, { includeUnpublished: true })
     if (!post) {
       return jsonError('文章不存在', 404)
     }

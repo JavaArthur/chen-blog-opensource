@@ -9,8 +9,9 @@ import { getSiteUrl } from '@/lib/site-config'
 const PAGE_SIZE = 25
 const BASE_URL = getSiteUrl()
 
-// Cloudflare Workers 缓存策略
-export const revalidate = 3600 // 1小时缓存
+// ISR: 页面缓存 1 小时后后台重新验证。
+// 需要 open-next.config.ts 配置 r2IncrementalCache + doShardedTagCache 才能生效。
+export const revalidate = 3600
 export const dynamicParams = true
 
 export const metadata = {

@@ -4,6 +4,7 @@
 
 ## 变更日志（Changelog）
 
+- 2026-05-06：修复首页 ISR 缓存不生效——配置 R2 incremental cache + DO sharded tag cache + DO queue，添加 wrangler 绑定。
 - 2026-04-27：初始化 Architect 扩展结构——新增「项目愿景」「架构总览」「模块结构图（Mermaid）」「模块索引」「编码规范」「AI 使用指引」等章节；同步为各子模块生成 `CLAUDE.md` 与面包屑导航。原有部署/已知坑/贡献上游等运营内容完整保留。
 - 2026-04-27：修复 D1 FTS5 SQLITE_CORRUPT_VTAB，搜索降级走 LIKE；新增「外链图片粘贴自动转存 R2」并已向上游开 PR。
 
@@ -196,6 +197,14 @@ npm run cf:init -- --site-url=https://your-domain.com
 - 创建 R2 bucket
 - 应用 `db/schema.sql` + `db/seed-template.sql`
 
+**额外步骤**：`cf-init.sh` 不会自动创建 ISR cache bucket，需手动创建：
+
+```bash
+npx wrangler r2 bucket create channing-blog-next-cache
+```
+
+然后确认 `wrangler.local.toml` 包含 ISR 相关绑定（`NEXT_INC_CACHE_R2_BUCKET`、`NEXT_CACHE_DO_QUEUE`、`NEXT_TAG_CACHE_DO_SHARDED`），这些已在 `wrangler.toml` 模板中配置。
+
 **⚠️ 已知坑 1**：`cf-init.sh` 在某些 wrangler 版本下，`--update-config` 不会把 D1 ID 写回配置，导致后续命令报 "Couldn't find DB with name 'DB'"。**必须手动核对** `wrangler.local.toml` 里有没有：
 
 ```toml
@@ -303,6 +312,17 @@ npx opennextjs-cloudflare deploy -c wrangler.local.toml
 ```bash
 npx wrangler d1 execute DB --remote --file=db/migrations/你的迁移.sql -c wrangler.local.toml
 ```
+
+### 坑 6：首页 `revalidate = 3600` 不生效，响应头始终 no-cache
+
+**现象**：页面设了 `export const revalidate = 3600`，但线上响应头是 `cache-control: private, no-cache, no-store, max-age=0, must-revalidate`，每次请求都打到 Worker。
+
+**根因**：`@opennextjs/cloudflare` 默认空配置（`defineCloudflareConfig()`）没有 cache backend。ISR 需要显式配置 `incrementalCache`（R2）+ `tagCache`（DO）+ `queue`（DO），否则运行时无处存缓存，降级为每次重渲染。
+
+**修复**：
+1. `open-next.config.ts` 配置 `r2IncrementalCache` + `doShardedTagCache` + `doQueue`
+2. `wrangler.toml` 添加 `NEXT_INC_CACHE_R2_BUCKET`（R2）、`NEXT_CACHE_DO_QUEUE` 和 `NEXT_TAG_CACHE_DO_SHARDED`（Durable Objects）绑定
+3. 首次部署前需创建 R2 cache bucket：`npx wrangler r2 bucket create channing-blog-next-cache`
 
 ## 五、项目结构要点
 

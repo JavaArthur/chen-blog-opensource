@@ -51,13 +51,21 @@ export async function getPosts(
   return results.map(mapPostWithTags)
 }
 
+export interface GetPostBySlugOptions {
+  /** 是否包含未发布/已删除/隐藏文章，默认 false（admin 调用时传 true） */
+  includeUnpublished?: boolean
+}
+
 // 根据 slug 获取文章（调用方可选传入公共 KV 缓存）
 export async function getPostBySlug(
   db: Database,
   slug: string,
   kv?: KVNamespace,
+  options?: GetPostBySlugOptions,
 ): Promise<PostWithTags | null> {
   await ensureSchema(db)
+
+  const includeUnpublished = options?.includeUnpublished ?? false
 
   if (kv) {
     try {
@@ -71,10 +79,20 @@ export async function getPostBySlug(
     }
   }
 
-  const post = await db
-    .prepare('SELECT * FROM posts WHERE slug = ?')
-    .bind(slug)
-    .first<Post>()
+  let post: Post | null
+  if (includeUnpublished) {
+    post = await db
+      .prepare('SELECT * FROM posts WHERE slug = ?')
+      .bind(slug)
+      .first<Post>()
+  } else {
+    post = await db
+      .prepare(
+        "SELECT * FROM posts WHERE slug = ? AND status = 'published' AND deleted_at IS NULL AND is_hidden = 0",
+      )
+      .bind(slug)
+      .first<Post>()
+  }
 
   if (!post) return null
 

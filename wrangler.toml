@@ -27,11 +27,21 @@ binding = "DB"
 [[r2_buckets]]
 binding = "IMAGES"
 
-# Optional KV cache for public content pages. Uncomment and fill id after running:
-#   npx wrangler kv namespace create <name> --binding CACHE
-# [[kv_namespaces]]
-# binding = "CACHE"
-# id = ""
+# ISR incremental cache bucket (used by @opennextjs/cloudflare r2-incremental-cache)
+[[r2_buckets]]
+binding = "NEXT_INC_CACHE_R2_BUCKET"
+bucket_name = "channing-blog-next-cache"
+
+# Durable Objects for ISR tag cache + revalidation queue
+[durable_objects]
+bindings = [
+  { name = "NEXT_CACHE_DO_QUEUE", class_name = "DOQueueHandler" },
+  { name = "NEXT_TAG_CACHE_DO_SHARDED", class_name = "DOShardedTagCache" },
+]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["DOQueueHandler", "DOShardedTagCache"]
 
 # Optional Queue binding for background jobs. Uncomment after creating the queue.
 # [[queues.producers]]

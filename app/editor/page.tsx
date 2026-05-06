@@ -42,7 +42,7 @@ export default async function EditorPage({
   if (edit) {
     const env = await getAppCloudflareEnv()
     if (env?.DB) {
-      const post = await getPostBySlug(env.DB, edit)
+      const post = await getPostBySlug(env.DB, edit, undefined, { includeUnpublished: true })
       if (post) {
         initialData = {
           slug: post.slug,
