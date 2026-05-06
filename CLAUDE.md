@@ -323,6 +323,34 @@ npx wrangler d1 execute DB --remote --file=db/migrations/你的迁移.sql -c wra
 1. `open-next.config.ts` 配置 `r2IncrementalCache` + `doShardedTagCache` + `doQueue`
 2. `wrangler.toml` 添加 `NEXT_INC_CACHE_R2_BUCKET`（R2）、`NEXT_CACHE_DO_QUEUE` 和 `NEXT_TAG_CACHE_DO_SHARDED`（Durable Objects）绑定
 3. 首次部署前需创建 R2 cache bucket：`npx wrangler r2 bucket create channing-blog-next-cache`
+### 坑 6：通过 API 批量发布文章时图片丢失
+
+**现象**：用 `POST /api/posts` 批量发布含图片的 Markdown 文章后，编辑器和前台看到的图片全部裂开。
+
+**根因**：数据库有两个内容字段——`content`（Markdown 源）和 `html`（渲染后 HTML）。
+- `POST /api/posts` 提交 `content` 后，后端会用 `remark` 渲染出 `html` 并同时存储。
+- 如果 content 里的图片路径是本地路径（如 `/images/2025/07/xxx.webp`）或外链（如 `http://qiniu.xxx/...`），html 字段会原封不动保存这些无效路径。
+- 后续用 `PATCH /api/posts` 只更新 `content` 字段时，**`html` 字段不会自动重新渲染**，编辑器仍展示旧的 html。
+
+**正确做法**：通过 API 发布含图片文章时，必须先处理图片再发布：
+
+1. **发布前**：扫描 Markdown 中所有图片引用
+   - 本地图片 → `POST /api/uploads`（multipart）上传到 R2，拿到 `/api/images/...` 路径
+   - 外链图片 → `POST /api/uploads/from-url` 服务端转存，拿到 `/api/images/...` 路径
+2. **替换** content 中的旧路径为 R2 路径
+3. **发布** `POST /api/posts`，此时 html 字段渲染出来的也是正确的 R2 路径
+
+**如果已经发错了**：需要同时更新 content 和 html 两个字段。两种修复方式：
+- 方式 A：`PATCH /api/posts` 同时传 `content` + `html` 两个字段（html 也需要做路径替换）
+- 方式 B：直接在 D1 执行 SQL（适合批量修复）：
+  ```sql
+  UPDATE posts SET html = REPLACE(html, '旧路径', '新R2路径') WHERE slug='xxx';
+  ```
+
+**关键提醒**：
+- `PATCH /api/posts` 需要 `current_slug` 字段定位文章（不是 URL path parameter）
+- 编辑器和前台展示优先读 `html` 字段，`content` 仅用于 Markdown 回显和搜索
+- 发布脚本/Skill 务必在发布前完成图片上传和路径替换，不要事后补
 
 ## 五、项目结构要点
 
