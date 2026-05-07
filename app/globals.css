@@ -794,6 +794,68 @@ body {
   border-color: #2a2f48 !important;
 }
 
+/* ── 主题：清透 (clarity) — Apple 设计语言 ── */
+[data-theme="clarity"] {
+  --background: #ffffff;
+  --foreground: #1d1d1f;
+  --editor-app-bg: #ffffff;
+  --editor-panel: #fafafc;
+  --editor-soft: #f5f5f7;
+  --editor-line: #e0e0e0;
+  --editor-ink: #1d1d1f;
+  --editor-muted: #6e6e73;
+  --editor-accent: #0066cc;
+  --editor-accent-ink: #ffffff;
+  --editor-link: #0066cc;
+  --editor-code-bg: #f5f5f7;
+  --editor-code-border: #e0e0e0;
+  --editor-quote-bg: #f5f5f7;
+  --editor-selection: rgba(0, 102, 204, 0.12);
+  --stone-gray: #86868b;
+  --border-warm: #e0e0e0;
+  --logo-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --article-heading: #1d1d1f;
+  --article-body: #333333;
+  --article-quote: #6e6e73;
+  --article-quote-border: #0066cc;
+  --article-quote-nested-border: #2997ff;
+  --article-quote-nested-bg: rgba(0, 102, 204, 0.04);
+}
+
+/* 清透主题：文章内容适配 */
+[data-theme="clarity"] :is(.novel-prose, .rich-content) h1,
+[data-theme="clarity"] :is(.novel-prose, .rich-content) h2,
+[data-theme="clarity"] :is(.novel-prose, .rich-content) h3 {
+  color: var(--article-heading);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+[data-theme="clarity"] :is(.novel-prose, .rich-content) blockquote {
+  border-left-color: var(--article-quote-border);
+  background: var(--editor-quote-bg);
+  color: var(--article-quote);
+  font-style: normal;
+}
+
+[data-theme="clarity"] :is(.novel-prose, .rich-content) a {
+  color: var(--editor-link);
+}
+
+[data-theme="clarity"] :is(.novel-prose, .rich-content) pre {
+  border-radius: 8px;
+}
+
+[data-theme="clarity"] :is(.novel-prose, .rich-content) hr {
+  border-top-color: var(--editor-line);
+}
+
+/* 清透主题：搜索面板 */
+[data-theme="clarity"] .search-panel {
+  background: #ffffff !important;
+  border-color: var(--editor-line) !important;
+}
+
 /* ══════════════════════════════════════════════════════
    跨页面主题适配：SiteHeader 宽度 & 样式
    ══════════════════════════════════════════════════════ */
@@ -831,6 +893,18 @@ body {
   border-bottom-style: dashed !important;
 }
 
+/* 清透：980px 宽度 + 毛玻璃 header */
+[data-theme="clarity"] .site-header-inner {
+  max-width: 980px;
+}
+
+[data-theme="clarity"] .site-header {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid #e0e0e0 !important;
+}
+
 /* 杂志编辑 & AI终端：header 导航等宽字体 */
 [data-theme="editorial"] .site-header nav,
 [data-theme="terminal"] .site-header nav {
@@ -860,6 +934,11 @@ body {
   padding-right: 40px;
 }
 
+/* 清透：980px */
+[data-theme="clarity"] .page-main {
+  max-width: 980px;
+}
+
 @media (max-width: 640px) {
   .theme-home-refined .refined-home-filter {
     display: none;
@@ -871,13 +950,15 @@ body {
 
   [data-theme="refined"] .site-header-inner,
   [data-theme="editorial"] .site-header-inner,
-  [data-theme="terminal"] .site-header-inner {
+  [data-theme="terminal"] .site-header-inner,
+  [data-theme="clarity"] .site-header-inner {
     padding-left: 16px;
     padding-right: 16px;
   }
 
   [data-theme="editorial"] .page-main,
-  [data-theme="terminal"] .page-main {
+  [data-theme="terminal"] .page-main,
+  [data-theme="clarity"] .page-main {
     padding-left: 16px;
     padding-right: 16px;
   }
@@ -1034,4 +1115,26 @@ body {
   .theme-home-terminal .terminal-post-body {
     min-width: 0;
   }
+
+  .theme-home-clarity .clarity-hero {
+    padding-top: 40px !important;
+    padding-bottom: 40px !important;
+  }
+
+  .theme-home-clarity .clarity-hero h1 {
+    font-size: 28px !important;
+  }
+
+  .theme-home-clarity .clarity-post-section {
+    padding-top: 40px !important;
+    padding-bottom: 40px !important;
+  }
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

@@ -123,6 +123,18 @@ export function SiteHeader({
       )
     }
 
+    if (theme === 'clarity') {
+      return (
+        <Link
+          href="/"
+          className="text-lg font-semibold tracking-tight text-[var(--editor-ink)] hover:text-[var(--editor-accent)] transition-colors duration-200 flex-shrink-0"
+          style={{ fontFamily: 'var(--logo-font)', letterSpacing: '-0.374px' }}
+        >
+          晨启AI博客
+        </Link>
+      )
+    }
+
     return (
       <Link
         href="/"
