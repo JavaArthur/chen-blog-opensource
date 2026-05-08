@@ -49,3 +49,12 @@ skills/
 wrangler.local.toml
 worker-configuration.d.ts
 .env.local.secrets.bak
+
+# Skill secrets
+ecosystem/channing-blog-publish-skill/config.json
+ecosystem/qiaomu-blog-publish-skill/config.json
+
+# Local dev artifacts
+.claude/worktrees/
+.playwright-mcp/
+clarity-detail-page.png

@@ -5,6 +5,8 @@ import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
 import {
   ArrowLeft,
   ChevronUp,
+  ClipboardCopy,
+  Copy,
   Globe,
   Eye,
   Loader2,
@@ -14,6 +16,7 @@ import {
   PanelRightClose,
   ImageIcon,
   Maximize2,
+  Smartphone,
   WandSparkles,
   X,
 } from 'lucide-react'
@@ -64,6 +67,8 @@ import { buildAutoDescription, normalizePostSlug, sanitizePostSlugInput } from '
 import { getSiteDisplayUrl } from '@/lib/site-config'
 import { resizeTextareaHeight, useAutoResizeTextarea } from '@/lib/textarea-autosize'
 import { EDITOR_REHOST_TOAST_EVENT, type EditorRehostToastDetail } from '@/lib/editor-rehost-toast'
+import { copyAsWechatArticleFormat } from '@/lib/wechat-copy'
+import { WechatPreviewPanel } from '@/components/WechatPreviewPanel'
 
 type SaveFeedback =
   | { type: 'success' | 'error'; message: string; slug?: string }
@@ -150,6 +155,7 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
   const [slug, setSlug] = useState(initialData?.slug || '')
 
   // ── UI state ──
+  const [wechatPreviewOpen, setWechatPreviewOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH)
   const [isResizingSidebar, setIsResizingSidebar] = useState(false)
@@ -1003,6 +1009,63 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-1">
+            <Tooltip label="复制 Markdown">
+              <button
+                type="button"
+                onClick={() => {
+                  const editor = editorRef.current
+                  if (!editor) return
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const md = (editor.storage as any).markdown?.getMarkdown?.() as string | undefined
+                  if (!md) { toast.error('获取 Markdown 失败'); return }
+                  const origin = window.location.origin
+                  const absoluteMd = md.replace(/\]\(\//g, `](${origin}/`)
+                  const full = title.trim() ? `# ${title.trim()}\n\n${absoluteMd}` : absoluteMd
+                  navigator.clipboard.writeText(full).then(
+                    () => toast.success('已复制 Markdown'),
+                    () => toast.error('复制失败'),
+                  )
+                }}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
+                aria-label="复制 Markdown"
+              >
+                <ClipboardCopy className="h-4 w-4" />
+              </button>
+            </Tooltip>
+
+            <Tooltip label="复制公众号格式">
+              <button
+                type="button"
+                onClick={async () => {
+                  const editor = editorRef.current
+                  if (!editor) return
+                  try {
+                    await copyAsWechatArticleFormat(title.trim() || '无标题', editor.getHTML())
+                    toast.success('已复制公众号格式')
+                  } catch {
+                    toast.error('复制公众号格式失败')
+                  }
+                }}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
+                aria-label="复制公众号格式"
+              >
+                <Copy className="h-4 w-4" />
+              </button>
+            </Tooltip>
+
+            <Tooltip label="公众号预览">
+              <button
+                type="button"
+                onClick={() => setWechatPreviewOpen(true)}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
+                aria-label="公众号预览"
+              >
+                <Smartphone className="h-4 w-4" />
+              </button>
+            </Tooltip>
+
+            <div className="mx-0.5 h-5 w-px bg-[var(--editor-line)]" />
+
             <Tooltip label="Ask AI（基于标题和正文）">
               <button
                 type="button"
@@ -1573,6 +1636,13 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
           }}
         />
       )}
+
+      <WechatPreviewPanel
+        open={wechatPreviewOpen}
+        onClose={() => setWechatPreviewOpen(false)}
+        title={title}
+        html={editorRef.current?.getHTML() || ''}
+      />
     </div>
   )
 }
