@@ -191,7 +191,7 @@ export default async function PostPage({
         stickyOnMobile={false}
       />
 
-      <main className="page-main mx-auto w-full max-w-3xl px-4 sm:px-6 flex-1 py-8 sm:py-12">
+      <main className="page-main article-main mx-auto w-full max-w-3xl px-4 sm:px-6 flex-1 py-8 sm:py-12">
         {!post.password && (() => {
           const baseUrl = getSiteUrl()
           const imgMatch = post.html?.match(/<img[^>]+src="([^"]+)"/)

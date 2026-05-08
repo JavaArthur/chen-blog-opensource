@@ -1,8 +1,13 @@
 import { resolve } from "node:path";
+import { existsSync } from "node:fs";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 import type { NextConfig } from "next";
 
-void initOpenNextCloudflareForDev();
+const wranglerConfigPath = existsSync(resolve(process.cwd(), "wrangler.local.toml"))
+  ? resolve(process.cwd(), "wrangler.local.toml")
+  : resolve(process.cwd(), "wrangler.toml");
+
+void initOpenNextCloudflareForDev({ configPath: wranglerConfigPath });
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,

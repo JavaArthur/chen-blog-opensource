@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": false,
   "scripts": {
-    "dev": "next dev",
+    "dev": "PREVIEW_REMOTE=1 bash scripts/cf-preview.sh",
+    "dev:next": "next dev",
     "build": "next build",
     "test": "vitest",
     "test:run": "vitest run",

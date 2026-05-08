@@ -8,6 +8,13 @@ CONFIG_PATH="$(bash "${SCRIPT_DIR}/cf-config.sh")"
 
 cd "${REPO_ROOT}"
 
+if [[ -f "${REPO_ROOT}/.env.local" ]]; then
+  set -a
+  # shellcheck disable=SC1091
+  source "${REPO_ROOT}/.env.local"
+  set +a
+fi
+
 echo "==> using wrangler config: ${CONFIG_PATH}"
 bash "${SCRIPT_DIR}/cf-validate-config.sh" "${CONFIG_PATH}"
 
