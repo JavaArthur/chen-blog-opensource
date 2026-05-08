@@ -42,8 +42,8 @@ export function SiteHeader({
   const categoryRef = useRef<HTMLDivElement>(null)
   const theme = useSyncExternalStore(
     subscribeToThemeChange,
-    () => getClientThemePreference(initialTheme),
-    () => initialTheme,
+    () => getClientThemePreference(),
+    () => 'default' as Theme,
   )
 
   // 点击外部关闭分类下拉

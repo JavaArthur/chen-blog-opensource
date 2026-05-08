@@ -50,8 +50,8 @@ function injectFont(id: string, href: string) {
 export function HomeClient(props: HomeProps) {
   const theme = useSyncExternalStore(
     subscribeToThemeChange,
-    () => getClientThemePreference(props.initialTheme),
-    () => props.initialTheme,
+    () => getClientThemePreference(),
+    () => 'default' as Theme,
   )
 
   const config = useMemo(() => getThemeConfig(theme), [theme])

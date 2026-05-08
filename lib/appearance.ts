@@ -81,16 +81,13 @@ export function normalizeTheme(value: string | null | undefined, fallback: Theme
   return isTheme(value) ? value : fallback
 }
 
-export function getClientThemePreference(fallback: Theme): Theme {
-  if (typeof window === 'undefined') return fallback
+export function getClientThemePreference(): Theme {
+  if (typeof window === 'undefined') return 'default'
 
   const saved = window.localStorage.getItem(THEME_STORAGE_KEY)
   if (isTheme(saved)) return saved
 
-  const attr = document.documentElement.getAttribute('data-theme')
-  if (isTheme(attr)) return attr
-
-  return fallback
+  return 'default'
 }
 
 export function subscribeToThemeChange(onStoreChange: () => void): () => void {
