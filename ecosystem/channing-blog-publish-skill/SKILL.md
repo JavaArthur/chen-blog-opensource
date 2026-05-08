@@ -1,6 +1,6 @@
 ---
 name: channing-blog-publish
-description: 把本地 Markdown / 纯文本 / 网页 URL 发布到 Channing Blog。行为与后台编辑器保持一致：本地图自动上传到 R2、外链图走服务端转存绕过防盗链、支持分类 / 标签 / 摘要 / 封面 / slug / 隐藏 / 密码 / 草稿 / 已发布全部字段。
+description: 发布 Markdown/纯文本/URL 到 Channing Blog。本地图上传 R2、外链图服务端转存，支持全部发布字段。
 trigger: /channing-blog-publish
 user_invocable: true
 ---
