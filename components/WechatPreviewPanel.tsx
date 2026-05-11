@@ -161,7 +161,7 @@ export function WechatPreviewPanel({ title, html, markdown, onClose }: WechatPre
             <ChevronDown className={`h-3.5 w-3.5 transition ${themeOpen ? 'rotate-180' : ''}`} />
           </button>
           {themeOpen && (
-            <div className="absolute left-0 top-full z-50 mt-2 w-[min(680px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl">
+            <div className="absolute right-0 top-full z-50 mt-2 w-[min(720px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl">
               <div className="flex items-center justify-between px-5 py-3">
                 <span className="text-sm font-semibold">选择排版风格</span>
                 <button
@@ -173,7 +173,7 @@ export function WechatPreviewPanel({ title, html, markdown, onClose }: WechatPre
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <div className="max-h-[58vh] overflow-y-auto px-5 pb-5">
+              <div className="max-h-[65vh] overflow-y-auto px-5 pb-5">
                 {THEME_GROUPS.map((group, index) => (
                   <div key={group.label} className={index ? 'mt-4 border-t border-black/10 pt-4' : ''}>
                     <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-[#86868b]">{group.label}</div>
