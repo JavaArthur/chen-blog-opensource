@@ -67,8 +67,8 @@ import { buildAutoDescription, normalizePostSlug, sanitizePostSlugInput } from '
 import { getSiteDisplayUrl } from '@/lib/site-config'
 import { resizeTextareaHeight, useAutoResizeTextarea } from '@/lib/textarea-autosize'
 import { EDITOR_REHOST_TOAST_EVENT, type EditorRehostToastDetail } from '@/lib/editor-rehost-toast'
-import { copyAsWechatArticleFormat } from '@/lib/wechat-copy'
 import { WechatPreviewPanel } from '@/components/WechatPreviewPanel'
+import { copyMarkdownAsWechatArticleFormat } from '@/lib/wechat-studio/copy'
 
 type SaveFeedback =
   | { type: 'success' | 'error'; message: string; slug?: string }
@@ -155,7 +155,7 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
   const [slug, setSlug] = useState(initialData?.slug || '')
 
   // ── UI state ──
-  const [wechatPreviewOpen, setWechatPreviewOpen] = useState(true)
+  const [wechatPreviewOpen, setWechatPreviewOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH)
   const [isResizingSidebar, setIsResizingSidebar] = useState(false)
@@ -1044,7 +1044,7 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
                   const editor = editorRef.current
                   if (!editor) return
                   try {
-                    await copyAsWechatArticleFormat(title.trim() || '无标题', editor.getHTML())
+                    await copyMarkdownAsWechatArticleFormat(currentPreviewMarkdown)
                     toast.success('已复制公众号格式')
                   } catch {
                     toast.error('复制公众号格式失败')
@@ -1207,19 +1207,18 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
       <input ref={fileUploadRef} type="file" accept="video/*,audio/*,.pdf,.zip,.rar,.7z,.epub,.mobi,.azw,.azw3,.txt,image/*" multiple className="hidden" onChange={e => { void handleSelectedFiles(e.target.files) }} />
       <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) void handleCoverUpload(f) }} />
 
-      {/* ── Main layout: editor + sidebar ── */}
-      <div className="flex flex-col lg:flex-row">
-        {wechatPreviewOpen && (
-          <WechatPreviewPanel
-            title={title}
-            html={currentEditorHtml}
-            markdown={currentPreviewMarkdown}
-            onClose={() => setWechatPreviewOpen(false)}
-          />
-        )}
-
-        {/* Main editor area */}
-        <main className="flex-1 min-w-0">
+      {/* ── Main layout: editor or WeChat layout studio ── */}
+      {wechatPreviewOpen ? (
+        <WechatPreviewPanel
+          title={title}
+          html={currentEditorHtml}
+          markdown={currentPreviewMarkdown}
+          onClose={() => setWechatPreviewOpen(false)}
+        />
+      ) : (
+        <div className="flex flex-col lg:flex-row">
+          {/* Main editor area */}
+          <main className="flex-1 min-w-0">
           <div className="mx-auto max-w-4xl px-4 pt-10 pb-8 sm:px-6">
             {/* Title input */}
             <div className="pb-4">
@@ -1323,7 +1322,7 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
               </EditorRoot>
             )}
           </div>
-        </main>
+          </main>
 
         {/* ── Sidebar resize handle (desktop only) ── */}
         {showSidebar && (
@@ -1584,7 +1583,8 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
             </div>
           )}
         </aside>
-      </div>
+        </div>
+      )}
 
       <InputModal open={inputModal.open} title={inputModal.title} placeholder={inputModal.placeholder} onConfirm={handleInputModalConfirm} onCancel={handleInputModalCancel} />
 

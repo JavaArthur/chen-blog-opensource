@@ -74,6 +74,85 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.wechat-studio-device {
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #e4e7ec 0%, #d5d9e2 22%, #eef0f5 50%, #d8dce5 78%, #c5cbd6 100%);
+  box-shadow:
+    inset 0 0 3px rgba(255, 255, 255, 0.8),
+    inset 0 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -2px 6px rgba(100, 110, 130, 0.3),
+    0 20px 50px -18px rgba(15, 23, 42, 0.35),
+    0 0 80px rgba(255, 255, 255, 0.8);
+}
+
+.wechat-studio-device-mobile {
+  width: min(520px, calc(100vw - 2rem));
+  height: min(1080px, calc(100vh - 10rem));
+  min-height: 620px;
+  border-radius: 56px;
+  padding: 12px;
+}
+
+.wechat-studio-device-tablet {
+  width: min(720px, calc(100vw - 2rem));
+  height: min(960px, calc(100vh - 10rem));
+  min-height: 620px;
+  border-radius: 40px;
+  padding: 16px;
+}
+
+.wechat-studio-device-screen {
+  position: relative;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  border-radius: 40px;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.wechat-studio-device-tablet .wechat-studio-device-screen {
+  border-radius: 28px;
+}
+
+.wechat-studio-device-scroll {
+  height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 38px;
+  background: transparent;
+}
+
+.wechat-studio-device-tablet .wechat-studio-device-scroll {
+  border-radius: 16px;
+}
+
+.wechat-studio-device-home {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  width: 130px;
+  height: 5px;
+  transform: translateX(-50%);
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+}
+
 /* Focus states */
 *:focus-visible {
   outline: 2px solid var(--editor-accent);

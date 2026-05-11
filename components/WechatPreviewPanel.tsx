@@ -1,15 +1,22 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
-import { Copy, FileText, Smartphone, X } from 'lucide-react'
-import juice from 'juice'
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
-  buildWechatExportCss,
-  normalizeWechatExportHtml,
-  type WechatExportStyleTokens,
-} from '@/lib/wechat-export-style'
+  Check,
+  ChevronDown,
+  Copy,
+  FileText,
+  Laptop,
+  Monitor,
+  RotateCcw,
+  Smartphone,
+  Tablet,
+  X,
+} from 'lucide-react'
 import { Tooltip } from '@/components/Tooltip'
 import { useToast } from '@/components/Toast'
+import { copyMarkdownAsWechatArticleFormat, renderWechatStudioMarkdown } from '@/lib/wechat-studio/copy'
+import { THEMES, THEME_GROUPS, type Theme } from '@/lib/wechat-studio/themes'
 
 interface WechatPreviewPanelProps {
   title: string
@@ -18,326 +25,294 @@ interface WechatPreviewPanelProps {
   onClose?: () => void
 }
 
-const URL_ATTRIBUTES = [
-  ['img', 'src'],
-  ['a', 'href'],
-  ['audio', 'src'],
-  ['video', 'src'],
-  ['source', 'src'],
-  ['iframe', 'src'],
-] as const
+type PreviewDevice = 'mobile' | 'tablet' | 'pc'
+type StudioMode = 'split' | 'preview' | 'source'
 
-const BASE_TOKENS: WechatExportStyleTokens = {
-  background: '#ffffff',
-  panelBackground: '#faf9f5',
-  softBackground: '#e8e6dc',
-  lineColor: '#f0eee6',
-  inkColor: '#141413',
-  mutedColor: '#5e5d59',
-  accentColor: '#c96442',
-  linkColor: '#576b95',
-  codeBackground: '#f6f8fa',
-  codeBorderColor: '#e8e6dc',
-  quoteBackground: '#faf9f5',
-  articleHeadingColor: '#17120d',
-  articleBodyColor: '#2b241c',
-  articleQuoteColor: '#51473a',
-  articleQuoteBorderColor: '#cdb796',
-  articleQuoteNestedBorderColor: '#b8a68a',
-  articleQuoteNestedBackground: 'rgba(0, 0, 0, 0.02)',
-  bodyFontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-  monoFontFamily: '"SFMono-Regular", Consolas, monospace',
-  titleFontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-}
+const QUICK_THEME_IDS = ['apple', 'claude', 'wechat', 'sspai']
 
-type ThemePreset = {
-  name: string
-  tokens: Partial<WechatExportStyleTokens>
-  overrideCss: string
-}
+function buildInitialMarkdown(title: string, markdown: string, html: string) {
+  const normalized = markdown.trim()
+  if (normalized) return normalized
 
-const THEME_PRESETS: ThemePreset[] = [
-  {
-    name: 'Mac',
-    tokens: {
-      articleBodyColor: '#1d1d1f',
-      articleHeadingColor: '#111111',
-      accentColor: '#0066cc',
-      linkColor: '#0066cc',
-      codeBackground: '#f5f5f7',
-      quoteBackground: '#f5f5f7',
-      articleQuoteBorderColor: '#0066cc',
-      articleQuoteColor: '#555555',
-    },
-    overrideCss: `.wechat-export-content { font-size: 16px; line-height: 1.7; letter-spacing: 0; }
-.wechat-export-title { font-size: 17px; font-weight: 600; line-height: 1.5; letter-spacing: 0; }
-.wechat-export-content blockquote { padding: 16px 18px; background: #f5f5f7; border-radius: 6px; }
-.wechat-export-content img { border-radius: 12px; }`,
-  },
-  {
-    name: 'Claude',
-    tokens: {
-      background: '#f8f6f0',
-      panelBackground: '#f8f6f0',
-      articleBodyColor: '#2b2b2b',
-      articleHeadingColor: '#b75c3d',
-      accentColor: '#b75c3d',
-      linkColor: '#b75c3d',
-      codeBackground: '#f0ece4',
-      quoteBackground: 'rgba(183, 92, 61, 0.04)',
-      articleQuoteBorderColor: '#b75c3d',
-      articleQuoteColor: '#555555',
-    },
-    overrideCss: `.wechat-export-root { background: #f8f6f0; }
-.wechat-export-article { background: #f8f6f0; }
-.wechat-export-content { font-size: 16px; line-height: 1.75; letter-spacing: 0; }
-.wechat-export-title { color: #b75c3d; font-size: 17px; font-weight: 600; letter-spacing: 0; }
-.wechat-export-content strong { color: #b75c3d; background: rgba(183, 92, 61, 0.08); padding: 0 4px; border-radius: 4px; }
-.wechat-export-content blockquote { background: rgba(183, 92, 61, 0.04); border-radius: 6px; }`,
-  },
-  {
-    name: '微信公众号原生',
-    tokens: {
-      articleBodyColor: '#333333',
-      articleHeadingColor: '#111111',
-      accentColor: '#07c160',
-      linkColor: '#07c160',
-      codeBackground: '#f0f7f2',
-      quoteBackground: '#f0f7f2',
-      articleQuoteBorderColor: '#07c160',
-      articleQuoteColor: '#555555',
-    },
-    overrideCss: `.wechat-export-content { font-size: 16px; line-height: 1.75; letter-spacing: 0.01em; }
-.wechat-export-title { font-size: 17px; font-weight: 500; line-height: 1.6; letter-spacing: 0; }
-.wechat-export-content strong { color: #07c160; background: rgba(7, 193, 96, 0.08); padding: 0 4px; border-radius: 4px; }
-.wechat-export-content blockquote { background: #f0f7f2; border-radius: 6px; }`,
-  },
-  {
-    name: '少数派',
-    tokens: {
-      articleBodyColor: '#333333',
-      articleHeadingColor: '#333333',
-      accentColor: '#d71a1b',
-      linkColor: '#d71a1b',
-      codeBackground: '#fff5f5',
-      quoteBackground: '#fef7f7',
-      articleQuoteBorderColor: '#d71a1b',
-      articleQuoteColor: '#555555',
-    },
-    overrideCss: `.wechat-export-content { font-size: 16px; line-height: 1.8; letter-spacing: 0; }
-.wechat-export-title { color: #d71a1b; font-size: 18px; font-weight: 700; line-height: 1.5; letter-spacing: 0; }
-.wechat-export-content h1 { color: #d71a1b; font-size: 1.45rem; }
-.wechat-export-content h2 { padding-left: 12px; border-left: 4px solid #d71a1b; }
-.wechat-export-content strong { color: #d71a1b; }
-.wechat-export-content blockquote { background: #fef7f7; border-radius: 6px; }
-.wechat-export-content img { border-radius: 8px; }`,
-  },
-]
-
-function absolutizeUrls(htmlString: string, baseUrl: string): string {
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(htmlString, 'text/html')
-  for (const [selector, attribute] of URL_ATTRIBUTES) {
-    for (const el of doc.querySelectorAll<HTMLElement>(selector)) {
-      const value = el.getAttribute(attribute)
-      if (!value || !value.trim() || value.trim().startsWith('#')) continue
-      if (/^(?:[a-z]+:|\/\/)/i.test(value.trim())) continue
-      try { el.setAttribute(attribute, new URL(value, baseUrl).toString()) } catch { /* skip */ }
-    }
+  if (html.trim() && typeof window !== 'undefined') {
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    const text = doc.body.textContent?.trim()
+    if (text) return title.trim() ? `# ${title.trim()}\n\n${text}` : text
   }
-  return doc.body.innerHTML
+
+  return title.trim() ? `# ${title.trim()}\n\n` : ''
 }
 
-function escapeHtml(value: string) {
-  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+function ThemeSwatch({ theme }: { theme: Theme }) {
+  const pick = (style: string, prop: string, fallback: string) => {
+    const match = style.match(new RegExp(`${prop}\\s*:\\s*([^;!]+)`, 'i'))
+    return match?.[1]?.trim() || fallback
+  }
+
+  const bg = pick(theme.styles.container || '', 'background-color', '#fff')
+  const text = pick(theme.styles.p || '', 'color', '#333')
+  const heading = pick(theme.styles.h1 || '', 'color', text)
+  const accent = pick(theme.styles.a || theme.styles.blockquote || '', 'color', heading)
+
+  return (
+    <span className="flex h-5 w-12 overflow-hidden rounded-md border border-black/10">
+      {[bg, heading, accent, text].map((color, index) => (
+        <span key={`${color}-${index}`} className="flex-1" style={{ backgroundColor: color }} />
+      ))}
+    </span>
+  )
 }
 
-type PreviewMode = 'styled' | 'markdown'
+function DeviceFrame({
+  device,
+  children,
+}: {
+  device: Exclude<PreviewDevice, 'pc'>
+  children: ReactNode
+}) {
+  return (
+    <div className={`wechat-studio-device wechat-studio-device-${device}`}>
+      <div className="wechat-studio-device-screen">
+        <div className="wechat-studio-device-scroll no-scrollbar">{children}</div>
+      </div>
+      <div className="wechat-studio-device-home" />
+    </div>
+  )
+}
 
 export function WechatPreviewPanel({ title, html, markdown, onClose }: WechatPreviewPanelProps) {
   const toast = useToast()
-  const [themeIndex, setThemeIndex] = useState(0)
-  const [previewMode, setPreviewMode] = useState<PreviewMode>('styled')
+  const [activeTheme, setActiveTheme] = useState('apple')
+  const [device, setDevice] = useState<PreviewDevice>('pc')
+  const [mode, setMode] = useState<StudioMode>('split')
+  const [themeOpen, setThemeOpen] = useState(false)
   const [copying, setCopying] = useState(false)
+  const [localMarkdown, setLocalMarkdown] = useState(() => buildInitialMarkdown(title, markdown, html))
 
-  const theme = THEME_PRESETS[themeIndex]
+  useEffect(() => {
+    setLocalMarkdown(buildInitialMarkdown(title, markdown, html))
+  }, [title, markdown, html])
 
-  const tokens = useMemo<WechatExportStyleTokens>(
-    () => ({ ...BASE_TOKENS, ...theme.tokens }),
-    [theme],
-  )
+  const activeThemeMeta = THEMES.find(theme => theme.id === activeTheme) || THEMES[0]
+  const quickThemes = QUICK_THEME_IDS
+    .map(id => THEMES.find(theme => theme.id === id))
+    .filter((theme): theme is Theme => Boolean(theme))
 
-  const exportCss = useMemo(() => buildWechatExportCss(tokens), [tokens])
-
-  const normalizedHtml = useMemo(() => {
-    if (typeof window === 'undefined') return html
-    return absolutizeUrls(normalizeWechatExportHtml(html), window.location.origin)
-  }, [html])
-
-  const safeTitle = title.trim() || '无标题'
-
-  const previewFragment = useMemo(() => `
-<section class="wechat-export-root">
-  <article class="wechat-export-article">
-    <p class="wechat-export-title">${escapeHtml(safeTitle)}</p>
-    <div class="wechat-export-content">${normalizedHtml}</div>
-  </article>
-</section>`, [safeTitle, normalizedHtml])
+  const renderedHtml = useMemo(() => {
+    if (typeof window === 'undefined') return ''
+    return renderWechatStudioMarkdown(localMarkdown, activeTheme)
+  }, [localMarkdown, activeTheme])
 
   const handleCopy = useCallback(async () => {
     if (copying) return
     setCopying(true)
     try {
-      const fullCss = exportCss + '\n' + theme.overrideCss
-      const inlined = juice.inlineContent(previewFragment, fullCss, {
-        applyWidthAttributes: true,
-        applyHeightAttributes: true,
-        applyAttributesTableElements: true,
-        preserveImportant: true,
-        resolveCSSVariables: false,
-        removeStyleTags: false,
-      })
-      const plainText = new DOMParser().parseFromString(inlined, 'text/html').body.textContent?.trim() || safeTitle
-
-      if (window.isSecureContext && navigator.clipboard?.write && typeof ClipboardItem !== 'undefined') {
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            'text/html': new Blob([inlined], { type: 'text/html' }),
-            'text/plain': new Blob([plainText], { type: 'text/plain' }),
-          }),
-        ])
-      } else {
-        const textarea = document.createElement('textarea')
-        textarea.value = plainText
-        textarea.setAttribute('readonly', 'true')
-        textarea.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'
-        const handler = (e: ClipboardEvent) => {
-          e.preventDefault()
-          e.clipboardData?.setData('text/html', inlined)
-          e.clipboardData?.setData('text/plain', plainText)
-        }
-        document.body.appendChild(textarea)
-        document.addEventListener('copy', handler)
-        textarea.select()
-        try { document.execCommand('copy') } finally {
-          document.removeEventListener('copy', handler)
-          textarea.remove()
-        }
-      }
+      await copyMarkdownAsWechatArticleFormat(localMarkdown, activeTheme)
       toast.success('已复制公众号格式')
     } catch {
-      toast.error('复制失败')
+      toast.error('复制公众号格式失败')
     } finally {
       setCopying(false)
     }
-  }, [copying, exportCss, theme.overrideCss, previewFragment, safeTitle, toast])
+  }, [activeTheme, copying, localMarkdown, toast])
+
+  const previewContent = (
+    <div
+      className="preview-content min-w-full"
+      dangerouslySetInnerHTML={{ __html: renderedHtml }}
+    />
+  )
 
   return (
-    <aside
-      className="shrink-0 border-b border-[var(--editor-line)] bg-[var(--background)] lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:w-[430px] lg:border-b-0 lg:border-r"
-    >
-      <div className="flex h-full min-h-[620px] flex-col">
-        <div className="border-b border-[var(--editor-line)] px-4 py-3">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-sm font-semibold text-[var(--editor-ink)]">公众号预览</div>
-              <div className="mt-0.5 truncate text-xs text-[var(--editor-muted)]">{theme.name}</div>
-            </div>
-            <div className="flex items-center gap-1">
-              <Tooltip label="样式预览">
-                <button
-                  type="button"
-                  onClick={() => setPreviewMode('styled')}
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition ${
-                    previewMode === 'styled'
-                      ? 'bg-[var(--editor-soft)] text-[var(--editor-accent)]'
-                      : 'text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-ink)]'
-                  }`}
-                  aria-label="样式预览"
-                >
-                  <Smartphone className="h-4 w-4" />
-                </button>
-              </Tooltip>
-              <Tooltip label="原始 Markdown">
-                <button
-                  type="button"
-                  onClick={() => setPreviewMode('markdown')}
-                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition ${
-                    previewMode === 'markdown'
-                      ? 'bg-[var(--editor-soft)] text-[var(--editor-accent)]'
-                      : 'text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-ink)]'
-                  }`}
-                  aria-label="原始 Markdown"
-                >
-                  <FileText className="h-4 w-4" />
-                </button>
-              </Tooltip>
-              <Tooltip label="以当前主题复制公众号格式">
-                <button
-                  type="button"
-                  onClick={handleCopy}
-                  disabled={copying}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] disabled:opacity-50"
-                  aria-label={copying ? '复制中' : '复制公众号格式'}
-                >
-                  <Copy className="h-4 w-4" />
-                </button>
-              </Tooltip>
-              {onClose && (
-                <Tooltip label="隐藏预览">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-ink)]"
-                    aria-label="隐藏预览"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </Tooltip>
-              )}
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-1 rounded-xl bg-[var(--editor-soft)] p-1">
-              {THEME_PRESETS.map((t, i) => (
-                <button
-                  key={t.name}
-                  type="button"
-                  onClick={() => setThemeIndex(i)}
-                  className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
-                    i === themeIndex
-                      ? 'bg-[var(--editor-panel)] text-[var(--editor-ink)] shadow-sm'
-                      : 'text-[var(--editor-muted)] hover:text-[var(--editor-ink)]'
-                  }`}
-                >
-                  {t.name}
-                </button>
-              ))}
+    <section className="flex h-[calc(100vh-3.5rem)] flex-col overflow-hidden bg-[#fbfbfd] text-[#1d1d1f]">
+      <div className="flex shrink-0 flex-wrap items-center gap-3 border-b border-black/10 bg-white/75 px-4 py-3 backdrop-blur-2xl">
+        <div className="flex min-w-0 items-center gap-2">
+          <FileText className="h-4 w-4 text-[#86868b]" />
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold">公众号排版工作台</div>
+            <div className="truncate text-xs text-[#86868b]">{activeThemeMeta.name} · {activeThemeMeta.description}</div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-[#eef0f4] px-3 py-5">
-          {previewMode === 'styled' ? (
-            <div className="mx-auto flex w-full max-w-[390px] flex-col rounded-[30px] bg-[#111] p-2 shadow-[0_24px_60px_rgba(15,23,42,0.22)]">
-              <div className="flex min-h-[640px] flex-col overflow-hidden rounded-[24px] bg-white">
-                <div className="flex h-11 shrink-0 items-center justify-center border-b border-[#f0f0f0] bg-white text-[13px] font-medium text-[#111]">
-                  公众号文章
-                </div>
-                <div className="flex-1 overflow-y-auto">
-                  <style>{exportCss + '\n' + theme.overrideCss}</style>
-                  <div className="px-4 py-5" dangerouslySetInnerHTML={{ __html: previewFragment }} />
-                </div>
+        <div className="h-5 w-px bg-black/10" />
+
+        <div className="flex items-center gap-1 rounded-full bg-black/[0.06] p-1">
+          {quickThemes.map(theme => (
+            <button
+              key={theme.id}
+              type="button"
+              onClick={() => setActiveTheme(theme.id)}
+              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${
+                activeTheme === theme.id ? 'bg-white text-[#1d1d1f] shadow-sm' : 'text-[#86868b] hover:text-[#1d1d1f]'
+              }`}
+            >
+              {theme.name}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setThemeOpen(open => !open)}
+            className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-3 py-1.5 text-xs font-medium text-[#1d1d1f] shadow-sm transition hover:bg-[#f5f5f7]"
+          >
+            全部 {THEMES.length} 款
+            <ChevronDown className={`h-3.5 w-3.5 transition ${themeOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {themeOpen && (
+            <div className="absolute left-0 top-full z-50 mt-2 w-[min(680px,calc(100vw-2rem))] overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl">
+              <div className="flex items-center justify-between px-5 py-3">
+                <span className="text-sm font-semibold">选择排版风格</span>
+                <button
+                  type="button"
+                  onClick={() => setThemeOpen(false)}
+                  className="rounded-full p-1 text-[#86868b] hover:bg-black/[0.06] hover:text-[#1d1d1f]"
+                  aria-label="关闭主题选择"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-            </div>
-          ) : (
-            <div className="mx-auto w-full max-w-[390px] rounded-2xl border border-[var(--editor-line)] bg-[var(--editor-panel)] p-4 shadow-sm">
-              <pre className="max-h-[680px] overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-6 text-[var(--editor-ink)]">
-                {markdown.trim() || (safeTitle === '无标题' ? '' : `# ${safeTitle}`)}
-              </pre>
+              <div className="max-h-[58vh] overflow-y-auto px-5 pb-5">
+                {THEME_GROUPS.map((group, index) => (
+                  <div key={group.label} className={index ? 'mt-4 border-t border-black/10 pt-4' : ''}>
+                    <div className="mb-2 text-xs font-semibold uppercase tracking-widest text-[#86868b]">{group.label}</div>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {group.themes.map(theme => (
+                        <button
+                          key={theme.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveTheme(theme.id)
+                            setThemeOpen(false)
+                          }}
+                          className={`flex flex-col items-start gap-1.5 rounded-xl p-3 text-left transition ${
+                            activeTheme === theme.id ? 'bg-[#0066cc]/10 ring-2 ring-[#0066cc]' : 'bg-[#f5f5f7] hover:bg-[#ebebed]'
+                          }`}
+                        >
+                          <span className="flex w-full items-center justify-between">
+                            <ThemeSwatch theme={theme} />
+                            {activeTheme === theme.id && <Check className="h-4 w-4 text-[#0066cc]" />}
+                          </span>
+                          <span className="text-sm font-semibold">{theme.name}</span>
+                          <span className="line-clamp-2 text-xs leading-snug text-[#86868b]">{theme.description}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
+
+        <div className="ml-auto flex items-center gap-1 rounded-full bg-black/[0.06] p-1">
+          {([
+            ['mobile', Smartphone, '手机预览'],
+            ['tablet', Tablet, '平板预览'],
+            ['pc', Monitor, '桌面预览'],
+          ] as const).map(([value, Icon, label]) => (
+            <Tooltip key={value} label={label}>
+              <button
+                type="button"
+                onClick={() => setDevice(value)}
+                className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition ${
+                  device === value ? 'bg-white text-[#0066cc] shadow-sm' : 'text-[#86868b] hover:text-[#1d1d1f]'
+                }`}
+                aria-label={label}
+              >
+                <Icon className="h-4 w-4" />
+              </button>
+            </Tooltip>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-1 rounded-full bg-black/[0.06] p-1">
+          {([
+            ['split', Laptop, '双栏'],
+            ['preview', Smartphone, '仅预览'],
+            ['source', FileText, '原始 Markdown'],
+          ] as const).map(([value, Icon, label]) => (
+            <Tooltip key={value} label={label}>
+              <button
+                type="button"
+                onClick={() => setMode(value)}
+                className={`inline-flex h-8 w-8 items-center justify-center rounded-full transition ${
+                  mode === value ? 'bg-white text-[#0066cc] shadow-sm' : 'text-[#86868b] hover:text-[#1d1d1f]'
+                }`}
+                aria-label={label}
+              >
+                <Icon className="h-4 w-4" />
+              </button>
+            </Tooltip>
+          ))}
+        </div>
+
+        <Tooltip label="同步当前博客正文">
+          <button
+            type="button"
+            onClick={() => setLocalMarkdown(buildInitialMarkdown(title, markdown, html))}
+            className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#86868b] transition hover:bg-black/[0.06] hover:text-[#1d1d1f]"
+            aria-label="同步当前博客正文"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </button>
+        </Tooltip>
+
+        <button
+          type="button"
+          onClick={handleCopy}
+          disabled={copying}
+          className="inline-flex items-center gap-2 rounded-full bg-black px-4 py-2 text-sm font-medium text-white transition hover:bg-black/80 disabled:opacity-50"
+        >
+          <Copy className="h-4 w-4" />
+          {copying ? '复制中' : '复制公众号格式'}
+        </button>
+
+        {onClose && (
+          <Tooltip label="返回博客编辑器">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-[#86868b] transition hover:bg-black/[0.06] hover:text-[#1d1d1f]"
+              aria-label="返回博客编辑器"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </Tooltip>
+        )}
       </div>
-    </aside>
+
+      <div className={`grid min-h-0 flex-1 ${mode === 'split' ? 'grid-cols-1 lg:grid-cols-[38.2fr_61.8fr]' : 'grid-cols-1'}`}>
+        {mode !== 'preview' && (
+          <div className="flex min-h-0 flex-col border-r border-black/10 bg-white">
+            <div className="flex h-11 shrink-0 items-center justify-between border-b border-black/10 px-4">
+              <span className="text-xs font-semibold uppercase tracking-widest text-[#86868b]">Markdown 源码</span>
+              <span className="text-xs text-[#86868b]">{localMarkdown.length.toLocaleString()} 字符</span>
+            </div>
+            <textarea
+              value={localMarkdown}
+              onChange={event => setLocalMarkdown(event.target.value)}
+              spellCheck={false}
+              className="min-h-0 flex-1 resize-none bg-white px-5 py-4 font-mono text-sm leading-7 text-[#1d1d1f] outline-none"
+            />
+          </div>
+        )}
+
+        {mode !== 'source' && (
+          <div className="relative min-h-0 overflow-y-auto bg-[#f2f2f7]/70">
+            <div className={`mx-auto flex min-h-full items-start justify-center px-4 py-10 ${device === 'pc' ? 'max-w-[1040px]' : ''}`}>
+              {device === 'pc' ? (
+                <div className="w-full overflow-hidden rounded-3xl border border-black/[0.06] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.12)]">
+                  {previewContent}
+                </div>
+              ) : (
+                <DeviceFrame device={device}>{previewContent}</DeviceFrame>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
   )
 }
