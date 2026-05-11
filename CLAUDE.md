@@ -1,3 +1,10 @@
+# OpenWolf
+
+@.wolf/OPENWOLF.md
+
+This project uses OpenWolf for context management. Read and follow .wolf/OPENWOLF.md every session. Check .wolf/cerebrum.md before generating code. Check .wolf/anatomy.md before reading files.
+
+
 # 晨启AI博客（channing-blog-opensource）— 项目手册
 
 > 面向未来的自己 / 接手开发者 / Claude。一页纸搞懂这个博客怎么跑、怎么部署、怎么恢复、怎么贡献。

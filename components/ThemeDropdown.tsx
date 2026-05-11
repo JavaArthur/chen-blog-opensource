@@ -43,7 +43,7 @@ export function ThemeDropdown({
   const theme = useSyncExternalStore(
     subscribeToThemeChange,
     () => getClientThemePreference(),
-    () => 'default' as Theme,
+    () => initialTheme,
   )
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)

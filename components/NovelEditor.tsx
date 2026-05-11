@@ -155,7 +155,7 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
   const [slug, setSlug] = useState(initialData?.slug || '')
 
   // ── UI state ──
-  const [wechatPreviewOpen, setWechatPreviewOpen] = useState(false)
+  const [wechatPreviewOpen, setWechatPreviewOpen] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH)
   const [isResizingSidebar, setIsResizingSidebar] = useState(false)
@@ -957,6 +957,10 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
     saveState === 'error' ? 'text-orange-500' : 'text-[var(--stone-gray)]'
 
   const showSidebar = sidebarOpen
+  const currentEditorHtml = editorRef.current?.getHTML() || ''
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const currentEditorMarkdown = ((editorRef.current?.storage as any)?.markdown?.getMarkdown?.() as string | undefined) || ''
+  const currentPreviewMarkdown = title.trim() ? `# ${title.trim()}\n\n${currentEditorMarkdown}` : currentEditorMarkdown
 
   return (
     <div className="min-h-screen bg-[var(--editor-app-bg)]">
@@ -1056,9 +1060,13 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
             <Tooltip label="公众号预览">
               <button
                 type="button"
-                onClick={() => setWechatPreviewOpen(true)}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] transition"
-                aria-label="公众号预览"
+                onClick={() => setWechatPreviewOpen((open) => !open)}
+                className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition ${
+                  wechatPreviewOpen
+                    ? 'bg-[var(--editor-soft)] text-[var(--editor-accent)]'
+                    : 'text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)]'
+                }`}
+                aria-label={wechatPreviewOpen ? '隐藏公众号预览' : '显示公众号预览'}
               >
                 <Smartphone className="h-4 w-4" />
               </button>
@@ -1200,7 +1208,16 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
       <input ref={coverInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) void handleCoverUpload(f) }} />
 
       {/* ── Main layout: editor + sidebar ── */}
-      <div className="flex">
+      <div className="flex flex-col lg:flex-row">
+        {wechatPreviewOpen && (
+          <WechatPreviewPanel
+            title={title}
+            html={currentEditorHtml}
+            markdown={currentPreviewMarkdown}
+            onClose={() => setWechatPreviewOpen(false)}
+          />
+        )}
+
         {/* Main editor area */}
         <main className="flex-1 min-w-0">
           <div className="mx-auto max-w-4xl px-4 pt-10 pb-8 sm:px-6">
@@ -1451,7 +1468,6 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
                         className="block w-full h-full cursor-zoom-in"
                         aria-label="查看封面大图"
                       >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={coverImage} alt="封面预览" className="w-full h-full object-cover" />
                       {/* hover 遮罩 + 居中文案 */}
                       <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1636,13 +1652,6 @@ export function NovelEditor({ initialData }: NovelEditorProps = {}) {
           }}
         />
       )}
-
-      <WechatPreviewPanel
-        open={wechatPreviewOpen}
-        onClose={() => setWechatPreviewOpen(false)}
-        title={title}
-        html={editorRef.current?.getHTML() || ''}
-      />
     </div>
   )
 }

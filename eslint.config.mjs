@@ -16,11 +16,20 @@ const eslintConfig = defineConfig([
     ".open-next/**",
     ".wrangler/**",
     "worker-configuration.d.ts",
+    // Local agent/browser workspaces and logs:
+    ".claude/**",
+    ".wolf/**",
+    ".playwright-mcp/**",
     // Companion tools in /ecosystem ship vendored or generated files that
     // should be linted within their own package context instead of the app root.
-    "ecosystem/chrome-clipper/lib/**",
-    "ecosystem/obsidian-publisher/main.js",
+    "ecosystem/chrome-clipper/**",
+    "ecosystem/obsidian-publisher/**",
   ]),
+  {
+    rules: {
+      "@next/next/no-img-element": "off",
+    },
+  },
 ]);
 
 export default eslintConfig;

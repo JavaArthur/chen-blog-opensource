@@ -1,19 +1,29 @@
 import type { Database } from '@/lib/repositories/schema'
 import type { CategoryRow } from '@/lib/repositories/types'
 
+function isMissingCategoriesTableError(error: unknown) {
+  return error instanceof Error && /no such table: categories/i.test(error.message)
+}
+
 // 获取所有分类
 export async function getCategories(db: Database): Promise<CategoryRow[]> {
-  const { results } = await db
-    .prepare('SELECT name, slug, post_count FROM categories ORDER BY name')
-    .all<CategoryRow>()
+  try {
+    const { results } = await db
+      .prepare('SELECT name, slug, post_count FROM categories ORDER BY name')
+      .all<CategoryRow>()
 
-  return results
+    return results
+  } catch (error) {
+    if (isMissingCategoriesTableError(error)) return []
+    throw error
+  }
 }
 
 export async function getPublicCategories(db: Database): Promise<CategoryRow[]> {
-  const { results } = await db
-    .prepare(
-      `SELECT categories.name, categories.slug, COUNT(posts.id) as post_count
+  try {
+    const { results } = await db
+      .prepare(
+        `SELECT categories.name, categories.slug, COUNT(posts.id) as post_count
        FROM categories
        JOIN posts
          ON posts.category = categories.name
@@ -23,10 +33,14 @@ export async function getPublicCategories(db: Database): Promise<CategoryRow[]> 
          AND posts.deleted_at IS NULL
        GROUP BY categories.name, categories.slug
        ORDER BY categories.name`,
-    )
-    .all<CategoryRow>()
+      )
+      .all<CategoryRow>()
 
-  return results
+    return results
+  } catch (error) {
+    if (isMissingCategoriesTableError(error)) return []
+    throw error
+  }
 }
 
 // 创建分类

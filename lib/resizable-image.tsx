@@ -302,7 +302,6 @@ function ResizableImageView(props: any) {
         className={`resizable-image ${selected ? 'selected' : ''} ${resizing ? 'resizing' : ''}`}
         style={{ position: 'relative', display: 'inline-block', width: buildWidthStyle(node.attrs.width) || undefined, maxWidth: '100%' }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           ref={imgRef}
           src={node.attrs.src}

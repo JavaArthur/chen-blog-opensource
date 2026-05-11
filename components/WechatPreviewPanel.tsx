@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Copy, X } from 'lucide-react'
+import { useCallback, useMemo, useState } from 'react'
+import { Copy, FileText, Smartphone, X } from 'lucide-react'
 import juice from 'juice'
 import {
   buildWechatExportCss,
@@ -12,10 +12,10 @@ import { Tooltip } from '@/components/Tooltip'
 import { useToast } from '@/components/Toast'
 
 interface WechatPreviewPanelProps {
-  open: boolean
-  onClose: () => void
   title: string
   html: string
+  markdown: string
+  onClose?: () => void
 }
 
 const URL_ATTRIBUTES = [
@@ -58,35 +58,79 @@ type ThemePreset = {
 
 const THEME_PRESETS: ThemePreset[] = [
   {
-    name: '默认',
-    tokens: {},
-    overrideCss: '',
+    name: 'Mac',
+    tokens: {
+      articleBodyColor: '#1d1d1f',
+      articleHeadingColor: '#111111',
+      accentColor: '#0066cc',
+      linkColor: '#0066cc',
+      codeBackground: '#f5f5f7',
+      quoteBackground: '#f5f5f7',
+      articleQuoteBorderColor: '#0066cc',
+      articleQuoteColor: '#555555',
+    },
+    overrideCss: `.wechat-export-content { font-size: 16px; line-height: 1.7; letter-spacing: 0; }
+.wechat-export-title { font-size: 17px; font-weight: 600; line-height: 1.5; letter-spacing: 0; }
+.wechat-export-content blockquote { padding: 16px 18px; background: #f5f5f7; border-radius: 6px; }
+.wechat-export-content img { border-radius: 12px; }`,
   },
   {
-    name: '优雅',
+    name: 'Claude',
+    tokens: {
+      background: '#f8f6f0',
+      panelBackground: '#f8f6f0',
+      articleBodyColor: '#2b2b2b',
+      articleHeadingColor: '#b75c3d',
+      accentColor: '#b75c3d',
+      linkColor: '#b75c3d',
+      codeBackground: '#f0ece4',
+      quoteBackground: 'rgba(183, 92, 61, 0.04)',
+      articleQuoteBorderColor: '#b75c3d',
+      articleQuoteColor: '#555555',
+    },
+    overrideCss: `.wechat-export-root { background: #f8f6f0; }
+.wechat-export-article { background: #f8f6f0; }
+.wechat-export-content { font-size: 16px; line-height: 1.75; letter-spacing: 0; }
+.wechat-export-title { color: #b75c3d; font-size: 17px; font-weight: 600; letter-spacing: 0; }
+.wechat-export-content strong { color: #b75c3d; background: rgba(183, 92, 61, 0.08); padding: 0 4px; border-radius: 4px; }
+.wechat-export-content blockquote { background: rgba(183, 92, 61, 0.04); border-radius: 6px; }`,
+  },
+  {
+    name: '微信公众号原生',
     tokens: {
       articleBodyColor: '#333333',
-      articleHeadingColor: '#1a1a1a',
-      accentColor: '#8b5cf6',
-      articleQuoteBorderColor: '#8b5cf6',
-      bodyFontFamily: 'Georgia, "Noto Serif SC", "Songti SC", serif',
-      titleFontFamily: 'Georgia, "Noto Serif SC", "Songti SC", serif',
+      articleHeadingColor: '#111111',
+      accentColor: '#07c160',
+      linkColor: '#07c160',
+      codeBackground: '#f0f7f2',
+      quoteBackground: '#f0f7f2',
+      articleQuoteBorderColor: '#07c160',
+      articleQuoteColor: '#555555',
     },
-    overrideCss: `.wechat-export-content { font-size: 16px; line-height: 1.9; letter-spacing: 0.04em; }
-.wechat-export-title { font-size: 16px; line-height: 1.9; }`,
+    overrideCss: `.wechat-export-content { font-size: 16px; line-height: 1.75; letter-spacing: 0.01em; }
+.wechat-export-title { font-size: 17px; font-weight: 500; line-height: 1.6; letter-spacing: 0; }
+.wechat-export-content strong { color: #07c160; background: rgba(7, 193, 96, 0.08); padding: 0 4px; border-radius: 4px; }
+.wechat-export-content blockquote { background: #f0f7f2; border-radius: 6px; }`,
   },
   {
-    name: '简约',
+    name: '少数派',
     tokens: {
-      articleBodyColor: '#3f3f46',
-      articleHeadingColor: '#18181b',
-      accentColor: '#2563eb',
-      articleQuoteBorderColor: '#d4d4d8',
-      linkColor: '#2563eb',
+      articleBodyColor: '#333333',
+      articleHeadingColor: '#333333',
+      accentColor: '#d71a1b',
+      linkColor: '#d71a1b',
+      codeBackground: '#fff5f5',
+      quoteBackground: '#fef7f7',
+      articleQuoteBorderColor: '#d71a1b',
+      articleQuoteColor: '#555555',
     },
-    overrideCss: `.wechat-export-content { font-size: 15px; line-height: 1.75; }
-.wechat-export-title { font-size: 15px; line-height: 1.75; }
-.wechat-export-content h1, .wechat-export-content h2, .wechat-export-content h3 { margin: 1.5em 0 0.6em; }`,
+    overrideCss: `.wechat-export-content { font-size: 16px; line-height: 1.8; letter-spacing: 0; }
+.wechat-export-title { color: #d71a1b; font-size: 18px; font-weight: 700; line-height: 1.5; letter-spacing: 0; }
+.wechat-export-content h1 { color: #d71a1b; font-size: 1.45rem; }
+.wechat-export-content h2 { padding-left: 12px; border-left: 4px solid #d71a1b; }
+.wechat-export-content strong { color: #d71a1b; }
+.wechat-export-content blockquote { background: #fef7f7; border-radius: 6px; }
+.wechat-export-content img { border-radius: 8px; }`,
   },
 ]
 
@@ -108,23 +152,13 @@ function escapeHtml(value: string) {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
-export function WechatPreviewPanel({ open, onClose, title, html }: WechatPreviewPanelProps) {
+type PreviewMode = 'styled' | 'markdown'
+
+export function WechatPreviewPanel({ title, html, markdown, onClose }: WechatPreviewPanelProps) {
   const toast = useToast()
   const [themeIndex, setThemeIndex] = useState(0)
+  const [previewMode, setPreviewMode] = useState<PreviewMode>('styled')
   const [copying, setCopying] = useState(false)
-
-  useEffect(() => {
-    if (!open) return
-    const handleEscape = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [open, onClose])
-
-  useEffect(() => {
-    if (!open) return
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
-  }, [open])
 
   const theme = THEME_PRESETS[themeIndex]
 
@@ -198,26 +232,79 @@ export function WechatPreviewPanel({ open, onClose, title, html }: WechatPreview
     }
   }, [copying, exportCss, theme.overrideCss, previewFragment, safeTitle, toast])
 
-  if (!open) return null
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
+    <aside
+      className="shrink-0 border-b border-[var(--editor-line)] bg-[var(--background)] lg:sticky lg:top-14 lg:h-[calc(100vh-3.5rem)] lg:w-[430px] lg:border-b-0 lg:border-r"
     >
-      <div className="relative flex flex-col rounded-2xl bg-[var(--editor-panel)] shadow-2xl overflow-hidden"
-        style={{ width: 420, maxWidth: '95vw', height: '90vh', maxHeight: 800 }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-[var(--editor-line)] px-4 py-2.5">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-[var(--editor-ink)]">公众号预览</span>
-            <div className="flex items-center gap-0.5 rounded-lg bg-[var(--editor-soft)] p-0.5">
+      <div className="flex h-full min-h-[620px] flex-col">
+        <div className="border-b border-[var(--editor-line)] px-4 py-3">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold text-[var(--editor-ink)]">公众号预览</div>
+              <div className="mt-0.5 truncate text-xs text-[var(--editor-muted)]">{theme.name}</div>
+            </div>
+            <div className="flex items-center gap-1">
+              <Tooltip label="样式预览">
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode('styled')}
+                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition ${
+                    previewMode === 'styled'
+                      ? 'bg-[var(--editor-soft)] text-[var(--editor-accent)]'
+                      : 'text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-ink)]'
+                  }`}
+                  aria-label="样式预览"
+                >
+                  <Smartphone className="h-4 w-4" />
+                </button>
+              </Tooltip>
+              <Tooltip label="原始 Markdown">
+                <button
+                  type="button"
+                  onClick={() => setPreviewMode('markdown')}
+                  className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition ${
+                    previewMode === 'markdown'
+                      ? 'bg-[var(--editor-soft)] text-[var(--editor-accent)]'
+                      : 'text-[var(--editor-muted)] hover:bg-[var(--editor-soft)] hover:text-[var(--editor-ink)]'
+                  }`}
+                  aria-label="原始 Markdown"
+                >
+                  <FileText className="h-4 w-4" />
+                </button>
+              </Tooltip>
+              <Tooltip label="以当前主题复制公众号格式">
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  disabled={copying}
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-accent)] disabled:opacity-50"
+                  aria-label={copying ? '复制中' : '复制公众号格式'}
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+              </Tooltip>
+              {onClose && (
+                <Tooltip label="隐藏预览">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[var(--editor-muted)] transition hover:bg-[var(--editor-soft)] hover:text-[var(--editor-ink)]"
+                    aria-label="隐藏预览"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </Tooltip>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1 rounded-xl bg-[var(--editor-soft)] p-1">
               {THEME_PRESETS.map((t, i) => (
                 <button
                   key={t.name}
+                  type="button"
                   onClick={() => setThemeIndex(i)}
-                  className={`rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
+                  className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
                     i === themeIndex
                       ? 'bg-[var(--editor-panel)] text-[var(--editor-ink)] shadow-sm'
                       : 'text-[var(--editor-muted)] hover:text-[var(--editor-ink)]'
@@ -226,37 +313,31 @@ export function WechatPreviewPanel({ open, onClose, title, html }: WechatPreview
                   {t.name}
                 </button>
               ))}
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            <Tooltip label="以当前主题复制公众号格式">
-              <button
-                onClick={handleCopy}
-                disabled={copying}
-                className="flex items-center gap-1.5 rounded-md bg-[var(--editor-accent)] px-2.5 py-1.5 text-xs font-medium text-white hover:brightness-105 transition-all disabled:opacity-50"
-              >
-                <Copy className="h-3.5 w-3.5" />
-                {copying ? '复制中...' : '复制'}
-              </button>
-            </Tooltip>
-            <button
-              onClick={onClose}
-              className="rounded-md p-1.5 text-[var(--editor-muted)] hover:text-[var(--editor-ink)] hover:bg-[var(--editor-soft)] transition-colors"
-              aria-label="关闭"
-            >
-              <X className="h-4 w-4" />
-            </button>
           </div>
         </div>
 
-        {/* Phone-simulated preview */}
-        <div className="flex-1 overflow-y-auto bg-[#f0f0f0] p-4">
-          <div className="mx-auto rounded-xl bg-white shadow-sm overflow-hidden" style={{ maxWidth: 375 }}>
-            <style>{exportCss + '\n' + theme.overrideCss}</style>
-            <div className="px-4 py-5" dangerouslySetInnerHTML={{ __html: previewFragment }} />
-          </div>
+        <div className="flex-1 overflow-y-auto bg-[#eef0f4] px-3 py-5">
+          {previewMode === 'styled' ? (
+            <div className="mx-auto flex w-full max-w-[390px] flex-col rounded-[30px] bg-[#111] p-2 shadow-[0_24px_60px_rgba(15,23,42,0.22)]">
+              <div className="flex min-h-[640px] flex-col overflow-hidden rounded-[24px] bg-white">
+                <div className="flex h-11 shrink-0 items-center justify-center border-b border-[#f0f0f0] bg-white text-[13px] font-medium text-[#111]">
+                  公众号文章
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                  <style>{exportCss + '\n' + theme.overrideCss}</style>
+                  <div className="px-4 py-5" dangerouslySetInnerHTML={{ __html: previewFragment }} />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mx-auto w-full max-w-[390px] rounded-2xl border border-[var(--editor-line)] bg-[var(--editor-panel)] p-4 shadow-sm">
+              <pre className="max-h-[680px] overflow-auto whitespace-pre-wrap break-words font-mono text-xs leading-6 text-[var(--editor-ink)]">
+                {markdown.trim() || (safeTitle === '无标题' ? '' : `# ${safeTitle}`)}
+              </pre>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </aside>
   )
 }

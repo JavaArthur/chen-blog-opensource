@@ -55,6 +55,7 @@ ecosystem/channing-blog-publish-skill/config.json
 ecosystem/qiaomu-blog-publish-skill/config.json
 
 # Local dev artifacts
-.claude/worktrees/
+.claude/
+.wolf/
 .playwright-mcp/
 clarity-detail-page.png

@@ -51,7 +51,6 @@ export function ImageLightbox({ src, alt = '图片预览', onClose }: ImageLight
         </button>
       </Tooltip>
 
-      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={alt}
