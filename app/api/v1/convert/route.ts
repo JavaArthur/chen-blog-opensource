@@ -125,8 +125,8 @@ export async function POST(req: NextRequest) {
     // 应用主题
     html = applyTheme(html, theme)
 
-    // 应用微信兼容处理（关键！）
-    html = await makeWeChatCompatible(html, theme)
+    // 应用微信兼容处理（服务端跳过 base64 图片转换，Workers 无 FileReader）
+    html = await makeWeChatCompatible(html, theme, { skipBase64: true })
 
     // 应用字体大小（通过包裹 section 标签）
     const fontSizeMap = {
@@ -194,9 +194,10 @@ ${contentHtml}
       outputFormat: 'fragment'
     })
   } catch (error) {
-    console.error('Markdown 转换失败:', error)
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('Markdown 转换失败:', message)
     return NextResponse.json(
-      { success: false, error: '转换失败，请检查 Markdown 格式' },
+      { success: false, error: `转换失败：${message}` },
       { status: 500 }
     )
   }

@@ -37,7 +37,12 @@ async function getBase64Image(imgUrl: string): Promise<string> {
     }
 }
 
-export async function makeWeChatCompatible(html: string, themeId: string): Promise<string> {
+export interface WeChatCompatOptions {
+  /** Skip base64 image conversion (needed for server-side where FileReader is unavailable) */
+  skipBase64?: boolean
+}
+
+export async function makeWeChatCompatible(html: string, themeId: string, options?: WeChatCompatOptions): Promise<string> {
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
 
@@ -189,14 +194,17 @@ export async function makeWeChatCompatible(html: string, themeId: string): Promi
     });
 
     // 5. Convert all images to Base64 for safe WeChat pasting
-    const imgs = Array.from(section.querySelectorAll('img'));
-    await Promise.all(imgs.map(async img => {
-        const src = img.getAttribute('src');
-        if (src && !src.startsWith('data:')) {
-            const base64 = await getBase64Image(src);
-            img.setAttribute('src', base64);
-        }
-    }));
+    //    Skip on server-side (FileReader unavailable in Workers runtime)
+    if (!options?.skipBase64) {
+        const imgs = Array.from(section.querySelectorAll('img'));
+        await Promise.all(imgs.map(async img => {
+            const src = img.getAttribute('src');
+            if (src && !src.startsWith('data:')) {
+                const base64 = await getBase64Image(src);
+                img.setAttribute('src', base64);
+            }
+        }));
+    }
 
     doc.body.innerHTML = '';
     doc.body.appendChild(section);
