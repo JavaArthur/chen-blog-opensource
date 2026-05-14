@@ -5,11 +5,27 @@ const mocks = vi.hoisted(() => ({
   getAppCloudflareEnv: vi.fn(),
   preprocessMarkdown: vi.fn((content: string) => content),
   mdRender: vi.fn((content: string) => `<p>${content}</p>`),
-  applyTheme: vi.fn((html: string) => html),
-  makeWeChatCompatible: vi.fn(async (html: string) => html),
   THEMES: [
-    { id: 'default', name: 'Default', description: 'Default theme', styles: {} },
-    { id: 'modern-tech', name: 'Modern Tech', description: 'Tech theme', styles: {} },
+    {
+      id: 'apple',
+      name: 'Mac',
+      description: 'Mac theme',
+      styles: {
+        container: 'font-family: -apple-system, "Segoe UI", sans-serif; font-size: 16px; line-height: 1.7 !important; color: #1d1d1f !important;',
+        p: 'margin: 18px 0 !important;',
+        h1: 'font-size: 32px;',
+      },
+    },
+    {
+      id: 'modern-tech',
+      name: 'Modern Tech',
+      description: 'Tech theme',
+      styles: {
+        container: 'font-family: -apple-system, "Segoe UI", sans-serif; font-size: 16px; line-height: 1.7 !important; color: #111827 !important;',
+        p: 'margin: 16px 0 !important;',
+        h1: 'font-size: 30px;',
+      },
+    },
   ],
 }))
 
@@ -26,11 +42,6 @@ vi.mock('@/lib/wechat-studio/markdown', () => ({
   md: {
     render: mocks.mdRender,
   },
-  applyTheme: mocks.applyTheme,
-}))
-
-vi.mock('@/lib/wechat-studio/wechat-compat', () => ({
-  makeWeChatCompatible: mocks.makeWeChatCompatible,
 }))
 
 vi.mock('@/lib/wechat-studio/themes', () => ({
@@ -207,7 +218,7 @@ describe('/api/v1/convert route', () => {
       expect(response.status).toBe(400)
       expect(data.success).toBe(false)
       expect(data.error).toContain('theme')
-      expect(data.error).toContain('default')
+      expect(data.error).toContain('apple')
     })
 
     it('应该拒绝无效的 fontSize', async () => {
@@ -260,8 +271,6 @@ describe('/api/v1/convert route', () => {
       mocks.verifyApiToken.mockResolvedValue(true)
       mocks.preprocessMarkdown.mockImplementation((content: string) => content)
       mocks.mdRender.mockImplementation((content: string) => `<p>${content}</p>`)
-      mocks.applyTheme.mockImplementation((html: string) => html)
-      mocks.makeWeChatCompatible.mockImplementation(async (html: string) => html)
     })
 
     it('应该成功转换基础 Markdown', async () => {
@@ -282,14 +291,14 @@ describe('/api/v1/convert route', () => {
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.html).toBeDefined()
-      expect(data.theme).toBe('default')
+      expect(data.theme).toBe('apple')
       expect(data.fontSize).toBe('medium')
       expect(data.convertVersion).toBe('v1')
 
       expect(mocks.preprocessMarkdown).toHaveBeenCalledWith(markdown)
       expect(mocks.mdRender).toHaveBeenCalled()
-      expect(mocks.applyTheme).toHaveBeenCalled()
-      expect(mocks.makeWeChatCompatible).toHaveBeenCalled()
+      expect(data.html).toContain('<section')
+      expect(data.html).toContain('&quot;Segoe UI&quot;')
     })
 
     it('应该使用默认参数', async () => {
@@ -305,7 +314,7 @@ describe('/api/v1/convert route', () => {
       const response = await POST(req)
       const data = await response.json()
 
-      expect(data.theme).toBe('default')
+      expect(data.theme).toBe('apple')
       expect(data.fontSize).toBe('medium')
       expect(data.convertVersion).toBe('v1')
     })
@@ -328,10 +337,7 @@ describe('/api/v1/convert route', () => {
 
       expect(response.status).toBe(200)
       expect(data.theme).toBe('modern-tech')
-      expect(mocks.applyTheme).toHaveBeenCalledWith(
-        expect.any(String),
-        'modern-tech'
-      )
+      expect(data.html).toContain('color: #111827')
     })
 
     it('应该应用不同的字体大小', async () => {
@@ -440,6 +446,53 @@ console.log('Hello');
       expect(data.html).toContain('<body>')
       expect(data.html).toContain('<meta charset="UTF-8">')
       expect(data.html).toContain('<meta name="viewport"')
+      expect(data.html).toContain('复制到微信编辑器')
+    })
+
+    it('standalone + text/html 应该直接返回可打开的 HTML 页面', async () => {
+      const req = new Request('http://localhost/api/v1/convert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'text/html',
+          'Authorization': 'Bearer qm_valid_token',
+        },
+        body: JSON.stringify({
+          markdown: '# Test',
+          outputFormat: 'standalone',
+        }),
+      })
+
+      const response = await POST(req)
+      const html = await response.text()
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get('Content-Type')).toContain('text/html')
+      expect(html).toContain('<!DOCTYPE html>')
+      expect(html).toContain('id="wechat-copy-root"')
+      expect(html).toContain('复制到微信编辑器')
+    })
+
+    it('responseFormat=html 应该直接返回微信兼容 HTML 片段', async () => {
+      const req = new Request('http://localhost/api/v1/convert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer qm_valid_token',
+        },
+        body: JSON.stringify({
+          markdown: '# Test',
+          responseFormat: 'html',
+        }),
+      })
+
+      const response = await POST(req)
+      const html = await response.text()
+
+      expect(response.status).toBe(200)
+      expect(response.headers.get('Content-Type')).toContain('text/html')
+      expect(html).toContain('<section')
+      expect(html).not.toContain('{"success"')
     })
   })
 

@@ -51,8 +51,10 @@ curl -X POST "https://your-domain.com/api/v1/convert" \
 ```json
 {
   "markdown": "# 标题\n\n正文内容",
-  "theme": "default",
+  "theme": "apple",
   "fontSize": "medium",
+  "outputFormat": "fragment",
+  "responseFormat": "json",
   "convertVersion": "v1"
 }
 ```
@@ -62,34 +64,49 @@ curl -X POST "https://your-domain.com/api/v1/convert" \
 | 参数 | 类型 | 必需 | 默认值 | 说明 |
 |------|------|------|--------|------|
 | `markdown` | string | ✅ | - | Markdown 文本内容 |
-| `theme` | string | ❌ | `default` | 主题 ID，见下方可用主题列表 |
+| `theme` | string | ❌ | `apple` | 主题 ID，见下方可用主题列表 |
 | `fontSize` | string | ❌ | `medium` | 字体大小：`small`、`medium`、`large` |
+| `outputFormat` | string | ❌ | `fragment` | 输出内容：`fragment`、`standalone` |
+| `responseFormat` | string | ❌ | `json` | 响应类型：`json`、`html` |
 | `convertVersion` | string | ❌ | `v1` | 转换版本标识 |
 
 **可用主题：**
 
 | Theme ID | 名称 | 分组 |
 |----------|------|------|
-| `default` | 默认主题 | 经典 |
-| `green-orange` | 绿橙主题 | 经典 |
-| `purple-blue` | 紫蓝主题 | 经典 |
-| `modern-tech` | 现代科技 | 现代 |
-| `modern-minimal` | 极简现代 | 现代 |
-| `modern-elegant` | 优雅现代 | 现代 |
-| `extra-dark` | 暗黑主题 | 额外 |
-| `extra-warm` | 温暖主题 | 额外 |
-| `extra-cool` | 清凉主题 | 额外 |
+| `apple` | Mac | 经典 |
+| `claude` | Claude | 经典 |
+| `wechat` | 微信公众号原生 | 经典 |
+| `notion` | Notion | 潮流 |
+| `github` | GitHub | 潮流 |
+| `sspai` | 少数派 | 潮流 |
+| `solarized` | Solarized | 更多风格 |
+| `ink` | 水墨 | 更多风格 |
 
 **响应示例：**
 ```json
 {
   "success": true,
   "html": "<section style=\"font-size: 16px;\"><h1>标题</h1><p>正文内容</p></section>",
-  "theme": "default",
+  "theme": "apple",
   "fontSize": "medium",
+  "outputFormat": "fragment",
   "convertVersion": "v1"
 }
 ```
+
+需要浏览器打开后直接复制到微信公众号编辑器时，使用 HTML 响应：
+
+```bash
+curl -X POST "https://note.aichanning.cn/api/v1/convert" \
+  -H "Authorization: Bearer qm_xxxxxxxxxxxxx" \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/html" \
+  -d '{"markdown":"# 标题\n\n正文内容","theme":"apple","outputFormat":"standalone"}' \
+  -o wechat-preview.html
+```
+
+打开 `wechat-preview.html` 后点击“复制到微信编辑器”，再粘贴到公众号正文区。
 
 **错误响应：**
 ```json
@@ -112,7 +129,7 @@ curl -X POST "https://note.aichanning.cn/api/v1/convert" \
   -H "Authorization: Bearer qm_xxxxxxxxxxxxx" \
   -d '{
     "markdown": "# 标题\n\n正文内容\n\n```javascript\nconsole.log(\"Hello\");\n```",
-    "theme": "modern-tech",
+    "theme": "apple",
     "fontSize": "medium",
     "convertVersion": "v1"
   }'

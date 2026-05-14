@@ -18,8 +18,10 @@
 
 | 方向 | 改进内容 |
 |------|---------|
+| 微信排版 | 内置排版引擎 + `POST /api/v1/convert` API，8 套主题一键转换，编辑器内嵌实时预览面板 |
 | 交互体验 | 全站 55+ tooltip 从原生 title（延迟 500ms+）替换为自研快速 Tooltip 组件（100ms） |
 | 编辑器增强 | 图片右键菜单、lightbox 大图预览、可拖拽侧边栏、外链图粘贴自动转存 R2 |
+| 首页主题 | 5 套主题（含 Apple 风格 clarity），上游仅 1 套 |
 | 数据稳定性 | 修复 D1 FTS5 SQLITE_CORRUPT_VTAB 导致的 autosave 500 错误，搜索降级 LIKE 兜底 |
 | 部署健壮性 | schema.sql 幂等化，解决重复部署报 "table already exists" |
 | 剪藏工具 | Chrome Clipper 支持 GFM 表格、剪藏后自动打开草稿编辑器 |
@@ -30,7 +32,9 @@
 ## 核心能力
 
 - 前台、后台双编辑器，所见即所得，接近飞书 / Notion 的写作体验
-- 四套首页主题，移动端友好，开箱即用
+- 五套首页主题（含 Apple 风格 clarity），移动端友好，开箱即用
+- 微信排版引擎：8 套主题 + 3 档字号，编辑器内嵌实时预览，一键复制到公众号
+- `POST /api/v1/convert` API：Markdown 转微信 HTML，支持 Bearer Token 认证，程序化调用
 - Bubble Menu + Ask AI，选中文本就能改写、润色、扩写、翻译
 - AI 自动处理摘要、标签、SEO slug、封面图
 - AI 生图模型配置、历史记录、插入替换工作流
@@ -40,11 +44,11 @@
 
 ## 截图预览
 
-### 四套首页主题
+### 五套首页主题
 
-![四套首页主题](docs/screenshots/home-themes.webp)
+![五套首页主题](docs/screenshots/home-themes.webp)
 
-### 编辑器与所见即所得写作
+### 编辑器与微信排版预览
 
 ![编辑器总览](docs/screenshots/editor-overview.webp)
 
@@ -115,6 +119,37 @@ npm run dev
 | `/admin` | 后台管理 |
 | `/editor` | 编辑器 |
 
+## 微信排版 API
+
+`POST /api/v1/convert` — 将 Markdown 转为微信公众号兼容的富文本 HTML。
+
+```bash
+curl -X POST "https://note.aichanning.cn/api/v1/convert" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer qm_xxxxxxxxxxxxx" \
+  -d '{"markdown": "# 标题\n\n**加粗**文本", "theme": "apple"}'
+```
+
+**参数：**
+
+| 参数 | 必需 | 默认值 | 说明 |
+|------|------|--------|------|
+| `markdown` | 是 | - | Markdown 文本 |
+| `theme` | 否 | `apple` | 主题 ID |
+| `fontSize` | 否 | `medium` | `small` / `medium` / `large` |
+| `outputFormat` | 否 | `fragment` | `fragment`（粘贴用）/ `standalone`（独立页面） |
+| `responseFormat` | 否 | `json` | `json` / `html` |
+
+**可用主题：**
+
+| 分组 | 主题 ID | 风格 |
+|------|---------|------|
+| 经典 | `apple` / `wechat` / `claude` | Mac 风格 / 微信原生 / Claude 风格 |
+| 潮流 | `notion` / `github` / `sspai` | Notion / GitHub / 少数派 |
+| 更多 | `solarized` / `ink` | Solarized / 水墨 |
+
+完整文档见 [docs/api/convert.md](docs/api/convert.md)。
+
 ## 技术栈
 
 | 层 | 技术 |
@@ -142,6 +177,7 @@ npm run dev
 ```
 app/                    # Next.js 路由层（API + 前台 + 后台）
 lib/                    # 业务逻辑与数据访问层
+  └── wechat-studio/    # 微信排版引擎（主题、Markdown 渲染、兼容层）
 components/             # React UI 组件
 db/                     # D1 schema、seed、迁移脚本
 scripts/                # Cloudflare 部署脚本

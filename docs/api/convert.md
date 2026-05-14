@@ -24,14 +24,15 @@ curl -X POST "https://note.aichanning.cn/api/v1/convert" \
   -H "Authorization: Bearer qm_xxxxxxxxxxxxx" \
   -d '{
     "markdown": "# 你好，世界\n\n这是一段**加粗**文本。",
-    "theme": "default",
+    "theme": "apple",
     "fontSize": "medium"
   }'
 ```
 
 ### 3. 复制 HTML 到微信编辑器
 
-将返回的 `html` 字段内容复制粘贴到微信公众号编辑器即可。
+如果走程序调用，读取返回 JSON 里的 `html` 字段，并以 HTML 富文本写入剪贴板。  
+如果要人工复制到微信公众号编辑器，请传 `outputFormat: "standalone"` 和 `responseFormat: "html"`，接口会直接返回可打开的排版页面，点击页面里的复制按钮后粘贴到微信正文区。
 
 ---
 
@@ -70,14 +71,16 @@ curl -X POST "https://note.aichanning.cn/api/v1/convert" \
 
 **类型：** `string`
 
-**默认值：** `"default"`
+**默认值：** `"apple"`
 
 **说明：** 应用的主题样式
 
 **可用主题列表：**
 
 #### 经典主题（Classic）
-- `default` - 默认主题（蓝色系，专业稳重）
+- `apple` - Mac 风格（纯净现代，适合日常记录）
+- `wechat` - 微信公众号原生（官方绿底纹）
+- `claude` - Claude 风格（温润长文）
 - `green-orange` - 绿橙主题（活力清新）
 - `purple-blue` - 紫蓝主题（优雅神秘）
 
@@ -109,7 +112,7 @@ curl -X POST "https://note.aichanning.cn/api/v1/convert" \
 ```json
 {
   "markdown": "# 技术文章",
-  "theme": "modern-tech"
+  "theme": "apple"
 }
 ```
 
@@ -146,7 +149,7 @@ curl -X POST "https://note.aichanning.cn/api/v1/convert" \
 
 **可用值：**
 - `fragment` - HTML 片段（用于粘贴到微信编辑器）
-- `standalone` - 完整的 HTML 文档（可独立访问）
+- `standalone` - 完整的 HTML 文档（可独立访问；配合 `responseFormat: "html"` 时直接返回页面）
 
 **说明：** 控制输出的 HTML 格式
 
@@ -167,6 +170,39 @@ curl -X POST "https://note.aichanning.cn/api/v1/convert" \
   "markdown": "# 标题",
   "outputFormat": "standalone"
 }
+```
+
+---
+
+### responseFormat（可选）
+
+**类型：** `string`
+
+**默认值：** `"json"`
+
+**可用值：**
+- `json` - 返回 JSON，HTML 放在 `html` 字段里，适合程序调用
+- `html` - 直接返回 `text/html; charset=utf-8`，适合浏览器打开后复制到微信编辑器
+
+**示例：**
+```json
+{
+  "markdown": "# 标题",
+  "theme": "apple",
+  "outputFormat": "standalone",
+  "responseFormat": "html"
+}
+```
+
+也可以通过请求头触发 HTML 响应：
+
+```bash
+curl -X POST "https://note.aichanning.cn/api/v1/convert" \
+  -H "Authorization: Bearer qm_xxxxxxxxxxxxx" \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/html" \
+  -d '{"markdown":"# 标题\n\n这是**加粗**文本。","theme":"apple","outputFormat":"standalone"}' \
+  -o wechat-preview.html
 ```
 
 ---
@@ -195,7 +231,7 @@ curl -X POST "https://note.aichanning.cn/api/v1/convert" \
 {
   "success": true,
   "html": "<section style=\"font-size: 16px;\">...</section>",
-  "theme": "default",
+  "theme": "apple",
   "fontSize": "medium",
   "convertVersion": "v1"
 }
@@ -210,6 +246,10 @@ curl -X POST "https://note.aichanning.cn/api/v1/convert" \
 - `fontSize` - 使用的字体大小
 - `convertVersion` - 转换版本
 - `outputFormat` - 输出格式
+
+当 `responseFormat` 为 `html`，或请求头 `Accept` 包含 `text/html` 时，成功响应体不是 JSON，而是 `text/html`：
+- `outputFormat: "fragment"`：返回可作为富文本片段写入剪贴板的 `<section>...</section>`
+- `outputFormat: "standalone"`：返回完整 HTML 页面，页面内置“复制到微信编辑器”按钮
 
 ---
 
