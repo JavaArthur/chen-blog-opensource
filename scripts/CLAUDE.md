@@ -22,7 +22,8 @@
 ```bash
 # 日常部署（推荐）
 set -a; source .env.local; set +a
-npx opennextjs-cloudflare deploy -c wrangler.local.toml
+npx opennextjs-cloudflare build
+OPEN_NEXT_DEPLOY=true npx wrangler deploy -c wrangler.local.toml
 ```
 
 少用 `npm run deploy`（会重跑 `db/schema.sql`，不幂等）。

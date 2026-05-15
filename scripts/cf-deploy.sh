@@ -28,4 +28,4 @@ if [[ -f "${REPO_ROOT}/db/seed-template.sql" ]]; then
     -c "${CONFIG_PATH}"
 fi
 
-npx opennextjs-cloudflare deploy -c "${CONFIG_PATH}"
+OPEN_NEXT_DEPLOY=true npx wrangler deploy -c "${CONFIG_PATH}"

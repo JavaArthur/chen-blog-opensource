@@ -131,9 +131,10 @@ npm run preview        # 在 Worker runtime 下预览，行为最接近线上
 # 2. 局部校验
 npm run verify:quick   # lint + test + build 的快速版
 
-# 3. 部署（推荐用 opennext 直接 deploy，比 npm run deploy 更快，不会重跑 schema）
+# 3. 部署（先构建，再用 wrangler 直发，避免 opennext deploy 拉起本地 DO 代理）
 set -a; source .env.local; set +a
-npx opennextjs-cloudflare deploy -c wrangler.local.toml
+npx opennextjs-cloudflare build
+OPEN_NEXT_DEPLOY=true npx wrangler deploy -c wrangler.local.toml
 
 # 4. 看线上日志（调试神器）
 npx wrangler tail -c wrangler.local.toml
@@ -239,7 +240,7 @@ printf "$AI_CONFIG_ENCRYPTION_SECRET"| npx wrangler secret put AI_CONFIG_ENCRYPT
 npm run cf-typegen
 set -a; source .env.local; set +a
 npx opennextjs-cloudflare build
-npx opennextjs-cloudflare deploy -c wrangler.local.toml
+OPEN_NEXT_DEPLOY=true npx wrangler deploy -c wrangler.local.toml
 ```
 
 **⚠️ 已知坑 3**：Workers **Free** 计划 script size 上限 3 MiB，本项目 handler.mjs 有约 11 MiB，**必须用 Workers Paid 计划（$5/月，10 MiB 上限）**。首次部署如果报 `exceeded size limit of 3 MiB`，去 https://dash.cloudflare.com/<ACCOUNT_ID>/workers/plans 升级。
@@ -301,11 +302,12 @@ set -a; source .env.local; set +a    # 每次新开终端都要跑
 
 `scripts/cf-deploy.sh` 每次部署都会重跑 `db/schema.sql`，但 schema 不是幂等的。
 
-**绕过方法**：跳过 npm script，直接调 opennext：
+**绕过方法**：跳过 npm script，先构建，再用 wrangler 直发：
 
 ```bash
 set -a; source .env.local; set +a
-npx opennextjs-cloudflare deploy -c wrangler.local.toml
+npx opennextjs-cloudflare build
+OPEN_NEXT_DEPLOY=true npx wrangler deploy -c wrangler.local.toml
 ```
 
 表结构要变更时再单独跑 migration：
@@ -367,6 +369,7 @@ npx wrangler d1 execute DB --remote --file=db/migrations/你的迁移.sql -c wra
 2. `next.config.ts` 只在 `next dev` 阶段初始化 `initOpenNextCloudflareForDev`。
 3. `wrangler.toml` / `wrangler.local.toml` 的 `[ai]` 绑定显式设置 `remote = true`。
 4. `worker.ts` 从 `@opennextjs/cloudflare/durable-objects/*` 稳定导出 DO 类，不依赖构建前不存在的 `.open-next/worker.js` 转导出。
+5. 部署使用 `npx opennextjs-cloudflare build` + `OPEN_NEXT_DEPLOY=true npx wrangler deploy -c wrangler.local.toml`，避免 `opennextjs-cloudflare deploy` 的 cache populate 阶段再次拉起本地平台代理。
 
 如确实需要在生产构建阶段读取 Cloudflare 远端绑定，可临时设置：
 
@@ -480,7 +483,7 @@ gh pr create --repo joeseesun/qiaomu-blog-opensource \
 
 - 任何涉及 CF/D1/R2 的操作前，先 `set -a; source .env.local; set +a`。
 - 改 schema → 先写 `db/migrations/*.sql`，**再** 改 `db/schema.sql`，不要直接编辑 schema 后指望 cf-deploy 能处理。
-- 部署用 `npx opennextjs-cloudflare deploy -c wrangler.local.toml`，**不要用** `npm run deploy`（会重跑 schema）。
+- 部署用 `npx opennextjs-cloudflare build` 后接 `OPEN_NEXT_DEPLOY=true npx wrangler deploy -c wrangler.local.toml`，**不要用** `npm run deploy`（会重跑 schema）。
 - 本地跑 `npx tsc --noEmit` 时，`tests/` 下存在上游遗留的类型报错，不要当作新引入问题。
 - 发现新的 Cloudflare 平台坑，**加到本文件「已知坑」章节**，别光 fix 不 doc。
 - 改代码后主动跑 `npm run verify:quick`（lint + test + build）。
