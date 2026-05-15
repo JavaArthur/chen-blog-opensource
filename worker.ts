@@ -2,6 +2,8 @@
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore -- generated artifact may be absent during clean Next type-checks
 import { default as handler } from './.open-next/worker.js'
+export { DOQueueHandler } from '@opennextjs/cloudflare/durable-objects/queue'
+export { DOShardedTagCache } from '@opennextjs/cloudflare/durable-objects/sharded-tag-cache'
 import { consumeBackgroundJobBatch, type BackgroundJob, type BackgroundJobEnv } from './lib/background-jobs'
 
 interface QueueMessage<T> {
@@ -23,7 +25,3 @@ const customWorker = {
 }
 
 export default customWorker
-
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore -- generated artifact may be absent during clean Next type-checks
-export { DOQueueHandler, DOShardedTagCache } from './.open-next/worker.js'

@@ -1,13 +1,16 @@
 import { resolve } from "node:path";
 import { existsSync } from "node:fs";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+import { PHASE_DEVELOPMENT_SERVER } from "next/constants";
 import type { NextConfig } from "next";
 
-const wranglerConfigPath = existsSync(resolve(process.cwd(), "wrangler.local.toml"))
-  ? resolve(process.cwd(), "wrangler.local.toml")
-  : resolve(process.cwd(), "wrangler.toml");
+function initCloudflareForDev() {
+  const wranglerConfigPath = existsSync(resolve(process.cwd(), "wrangler.local.toml"))
+    ? resolve(process.cwd(), "wrangler.local.toml")
+    : resolve(process.cwd(), "wrangler.toml");
 
-void initOpenNextCloudflareForDev({ configPath: wranglerConfigPath });
+  void initOpenNextCloudflareForDev({ configPath: wranglerConfigPath });
+}
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
@@ -38,4 +41,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default function config(phase: string): NextConfig {
+  if (phase === PHASE_DEVELOPMENT_SERVER) {
+    initCloudflareForDev();
+  }
+
+  return nextConfig;
+}

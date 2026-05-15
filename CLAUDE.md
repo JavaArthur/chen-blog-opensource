@@ -11,6 +11,7 @@ This project uses OpenWolf for context management. Read and follow .wolf/OPENWOL
 
 ## 变更日志（Changelog）
 
+- 2026-05-15：修复构建期 Cloudflare 本地 DO / AI binding warning 与 OpenNext duplicate-case warning——生产构建阶段不再拉起 Wrangler 平台代理，Workers AI 显式标记 remote，PDF 导出库移出服务端模块图。
 - 2026-05-06：修复首页 ISR 缓存不生效——配置 R2 incremental cache + DO sharded tag cache + DO queue，添加 wrangler 绑定。
 - 2026-04-27：初始化 Architect 扩展结构——新增「项目愿景」「架构总览」「模块结构图（Mermaid）」「模块索引」「编码规范」「AI 使用指引」等章节；同步为各子模块生成 `CLAUDE.md` 与面包屑导航。原有部署/已知坑/贡献上游等运营内容完整保留。
 - 2026-04-27：修复 D1 FTS5 SQLITE_CORRUPT_VTAB，搜索降级走 LIKE；新增「外链图片粘贴自动转存 R2」并已向上游开 PR。
@@ -358,6 +359,37 @@ npx wrangler d1 execute DB --remote --file=db/migrations/你的迁移.sql -c wra
 - `PATCH /api/posts` 需要 `current_slug` 字段定位文章（不是 URL path parameter）
 - 编辑器和前台展示优先读 `html` 字段，`content` 仅用于 Markdown 回显和搜索
 - 发布脚本/Skill 务必在发布前完成图片上传和路径替换，不要事后补
+
+### 坑 7：`next build` 刷 Cloudflare 本地 DO / AI binding warning
+
+**现象**：本地跑 `npm run build` / `npm run verify:quick` 时，日志反复出现：
+- `You have defined bindings to the following internal Durable Objects`
+- `A DurableObjectNamespace in the config referenced the class ... but no such Durable Object class is exported`
+- `AI bindings always access remote resources`
+
+**根因**：生产构建阶段调用 `getCloudflareContext({ async: true })` 会让 Wrangler 拉起本地平台代理并读取完整 `wrangler.toml`。这会把 ISR 用的内部 Durable Objects 当成本地开发绑定检查，而此时 `.open-next/worker.js` 还没生成，导致 DO 导出检查误报；Workers AI 默认就是远端资源，也会提示计费 warning。
+
+**当前方案**：
+1. `lib/cloudflare.ts` 在 `NEXT_PHASE=phase-production-build` 时返回空 Cloudflare context，构建不再读线上 D1/R2，也不再拉起本地 DO。
+2. `next.config.ts` 只在 `next dev` 阶段初始化 `initOpenNextCloudflareForDev`。
+3. `wrangler.toml` / `wrangler.local.toml` 的 `[ai]` 绑定显式设置 `remote = true`。
+4. `worker.ts` 从 `@opennextjs/cloudflare/durable-objects/*` 稳定导出 DO 类，不依赖构建前不存在的 `.open-next/worker.js` 转导出。
+
+如确实需要在生产构建阶段读取 Cloudflare 远端绑定，可临时设置：
+
+```bash
+OPENNEXT_USE_CLOUDFLARE_CONTEXT_DURING_BUILD=1 npm run build
+```
+
+默认不要这么做；它会让构建依赖线上资源，降低可复现性。
+
+### 坑 8：OpenNext 打包出现 `duplicate-case` warning
+
+**现象**：`npx opennextjs-cloudflare build` 在 `Bundling the OpenNext server` 阶段出现 `This case clause will never be evaluated because it duplicates an earlier case clause [duplicate-case]`。
+
+**根因**：`html2pdf.js` 依赖的 `html2canvas@1.4.1` 内部存在重复 `case 22`。即使只在 client 函数里动态 `import('html2pdf.js')`，Turbopack 仍会生成服务端动态 chunk，OpenNext 最终 bundle 会扫描到它。
+
+**当前方案**：PDF 导出改为点击时从浏览器加载固定版本 `https://cdn.jsdelivr.net/npm/html2pdf.js@0.14.0/dist/html2pdf.bundle.min.js`，并从 npm 依赖中移除 `html2pdf.js`。这样服务端 bundle 不再包含 `html2canvas`，warning 消失，PDF 能力仍保留在浏览器端。
 
 ## 五、项目结构要点
 

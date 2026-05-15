@@ -1,10 +1,26 @@
 'use client'
 
-import html2pdf from 'html2pdf.js'
 import juice from 'juice'
 import { buildWechatExportCss, normalizeWechatExportHtml, type WechatExportStyleTokens } from './wechat-export-style'
 
 type ExportMode = 'clipboard' | 'pdf'
+type Html2PdfWorker = {
+  set(options: unknown): {
+    from(element: HTMLElement): {
+      save(): Promise<void>
+    }
+  }
+}
+type Html2PdfFactory = () => Html2PdfWorker
+
+declare global {
+  interface Window {
+    html2pdf?: Html2PdfFactory
+  }
+}
+
+const HTML2PDF_SCRIPT_URL = 'https://cdn.jsdelivr.net/npm/html2pdf.js@0.14.0/dist/html2pdf.bundle.min.js'
+let html2pdfLoadPromise: Promise<Html2PdfFactory> | undefined
 
 const URL_ATTRIBUTES = [
   ['img', 'src'],
@@ -36,6 +52,28 @@ function waitForLayout() {
   return new Promise<void>((resolve) => {
     window.requestAnimationFrame(() => resolve())
   })
+}
+
+function loadHtml2Pdf() {
+  if (window.html2pdf) return Promise.resolve(window.html2pdf)
+  if (html2pdfLoadPromise) return html2pdfLoadPromise
+
+  html2pdfLoadPromise = new Promise<Html2PdfFactory>((resolve, reject) => {
+    const script = document.createElement('script')
+    script.src = HTML2PDF_SCRIPT_URL
+    script.async = true
+    script.onload = () => {
+      if (window.html2pdf) {
+        resolve(window.html2pdf)
+      } else {
+        reject(new Error('PDF 导出组件加载失败'))
+      }
+    }
+    script.onerror = () => reject(new Error('PDF 导出组件加载失败，请检查网络后重试'))
+    document.head.appendChild(script)
+  })
+
+  return html2pdfLoadPromise
 }
 
 async function waitForMediaReady(root: HTMLElement) {
@@ -401,6 +439,7 @@ export async function downloadArticleAsPdf(title: string, html: string) {
 
   try {
     prepared = await prepareArticleExportStage(title, html)
+    const html2pdf = await loadHtml2Pdf()
     const pdfOptions = {
       margin: [16, 12, 16, 12],
       filename: `${prepared.normalizedTitle}.pdf`,
@@ -421,7 +460,6 @@ export async function downloadArticleAsPdf(title: string, html: string) {
       },
     }
 
-    // html2pdf.js runtime supports `pagebreak`, but its bundled d.ts omits it.
     await html2pdf()
       .set(pdfOptions as never)
       .from(prepared.article)
