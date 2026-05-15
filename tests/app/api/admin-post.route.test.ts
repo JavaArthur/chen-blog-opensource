@@ -90,4 +90,31 @@ describe('/api/admin/posts/[slug] route', () => {
     expect(mocks.enqueueBackgroundJob).toHaveBeenCalledTimes(1)
     expect(body).toEqual({ success: true, slug: 'next_slug' })
   })
+
+  it('renders html when admin update receives markdown content without html', async () => {
+    mocks.parseJsonBody.mockResolvedValue({
+      content: '## 小标题\n\n正文',
+      description: '摘要',
+    })
+
+    const request = {
+      cookies: {
+        get: vi.fn(() => ({ value: 'token' })),
+      },
+    } as never
+
+    const response = await PUT(request, {
+      params: Promise.resolve({ slug: 'old-slug' }),
+    })
+
+    expect(response.status).toBe(200)
+    expect(mocks.updatePost).toHaveBeenCalledWith(
+      { kind: 'db' },
+      7,
+      expect.objectContaining({
+        content: '## 小标题\n\n正文',
+        html: expect.stringContaining('<h2>小标题</h2>'),
+      }),
+    )
+  })
 })

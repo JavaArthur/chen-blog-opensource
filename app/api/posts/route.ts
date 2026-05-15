@@ -2,10 +2,8 @@ import { createPost, updatePostBySlug } from '@/lib/db'
 import { invalidatePublicContentCache } from '@/lib/cache'
 import { enqueueBackgroundJob } from '@/lib/background-jobs'
 import { nanoid } from 'nanoid'
-import { remark } from 'remark'
-import remarkGfm from 'remark-gfm'
-import remarkHtml from 'remark-html'
 import { buildAutoDescription, normalizePostSlug } from '@/lib/post-utils'
+import { renderPostMarkdownToHtml } from '@/lib/post-render'
 import {
   ensureAuthenticatedRequest,
   getRouteContextWithDb,
@@ -59,12 +57,7 @@ export async function POST(req: NextRequest) {
     // 3. 优先使用编辑器直接生成的 HTML，兼容旧版 Markdown 提交
     const htmlContent =
       rawHtml ||
-      (
-        await remark()
-          .use(remarkGfm)
-          .use(remarkHtml, { sanitize: false })
-          .process(content)
-      ).toString()
+      await renderPostMarkdownToHtml(content)
 
     // 4. 立即保存到 D1（不等 AI）
     const postId = await createPost(db, {
@@ -152,6 +145,9 @@ export async function PATCH(req: NextRequest) {
     if (payload.title !== undefined) updates.title = payload.title
     if (payload.content !== undefined) updates.content = payload.content
     if (payload.html !== undefined) updates.html = payload.html
+    else if (typeof payload.content === 'string') {
+      updates.html = await renderPostMarkdownToHtml(payload.content)
+    }
     if (payload.description !== undefined) {
       const rawDescription = typeof payload.description === 'string' ? payload.description.trim() : ''
       const rawContent = typeof payload.content === 'string' ? payload.content : ''

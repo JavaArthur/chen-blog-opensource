@@ -21,7 +21,6 @@ export function HomeDefault({
   navLinks,
   currentPage,
   totalPages,
-  categorySlugMap,
 }: HomeProps) {
   return (
     <div className="min-h-full flex flex-col bg-[var(--background)]">
@@ -89,21 +88,9 @@ export function HomeDefault({
                         {post.category && (
                           <>
                             <span aria-hidden>·</span>
-                            {(() => {
-                              const slug = categorySlugMap[post.category]
-                              return slug ? (
-                                <Link
-                                  href={`/category/${slug}`}
-                                  className="px-2 py-0.5 rounded-full bg-[var(--editor-accent)]/8 text-[var(--editor-accent)] font-medium border border-[var(--editor-accent)]/15 hover:bg-[var(--editor-accent)]/12 transition-colors"
-                                >
-                                  {post.category}
-                                </Link>
-                              ) : (
-                                <span className="px-2 py-0.5 rounded-full bg-[var(--editor-accent)]/8 text-[var(--editor-accent)] font-medium border border-[var(--editor-accent)]/15">
-                                  {post.category}
-                                </span>
-                              )
-                            })()}
+                            <span className="px-2 py-0.5 rounded-full bg-[var(--editor-accent)]/8 text-[var(--editor-accent)] font-medium border border-[var(--editor-accent)]/15">
+                              {post.category}
+                            </span>
                           </>
                         )}
                       </div>

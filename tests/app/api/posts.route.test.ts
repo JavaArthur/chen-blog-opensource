@@ -127,4 +127,23 @@ describe('/api/posts route', () => {
     )
     expect(body).toEqual({ success: true, slug: 'new_slug' })
   })
+
+  it('renders html when an agent patches markdown content without html', async () => {
+    mocks.parseJsonBody.mockResolvedValue({
+      current_slug: 'agent-draft',
+      content: '# Agent 标题\n\n正文内容',
+    })
+
+    const response = await PATCH({} as never)
+
+    expect(response.status).toBe(200)
+    expect(mocks.updatePostBySlug).toHaveBeenCalledWith(
+      { kind: 'db' },
+      'agent-draft',
+      expect.objectContaining({
+        content: '# Agent 标题\n\n正文内容',
+        html: expect.stringContaining('<h1>Agent 标题</h1>'),
+      }),
+    )
+  })
 })

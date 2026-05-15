@@ -14,7 +14,6 @@ export function HomeClarity({
   navLinks,
   currentPage,
   totalPages,
-  categorySlugMap,
 }: HomeProps) {
   return (
     <div className="theme-home-clarity min-h-full flex flex-col">
@@ -57,20 +56,14 @@ export function HomeClarity({
                         <time className="text-sm text-[var(--stone-gray)] shrink-0 tabular-nums">
                           {formatDate(post.published_at)}
                         </time>
-                        {post.category && (() => {
-                          const slug = categorySlugMap[post.category]
-                          const pill = (
-                            <span
-                              className="text-xs font-medium px-2.5 py-0.5 rounded-full text-white shrink-0"
-                              style={{ backgroundColor: 'var(--editor-accent)' }}
-                            >
-                              {post.category}
-                            </span>
-                          )
-                          return slug ? (
-                            <Link href={`/category/${slug}`}>{pill}</Link>
-                          ) : pill
-                        })()}
+                        {post.category && (
+                          <span
+                            className="text-xs font-medium px-2.5 py-0.5 rounded-full text-white shrink-0"
+                            style={{ backgroundColor: 'var(--editor-accent)' }}
+                          >
+                            {post.category}
+                          </span>
+                        )}
                       </div>
                       <h2
                         className="text-xl sm:text-2xl font-semibold text-[var(--editor-ink)] leading-snug group-hover:text-[var(--editor-accent)] transition-colors duration-200"

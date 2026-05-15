@@ -74,6 +74,22 @@ body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
+html[data-theme-pending="default"] [data-home-theme-root]:not([data-home-theme="default"]),
+html[data-theme-pending="refined"] [data-home-theme-root]:not([data-home-theme="refined"]),
+html[data-theme-pending="editorial"] [data-home-theme-root]:not([data-home-theme="editorial"]),
+html[data-theme-pending="terminal"] [data-home-theme-root]:not([data-home-theme="terminal"]),
+html[data-theme-pending="clarity"] [data-home-theme-root]:not([data-home-theme="clarity"]) {
+  visibility: hidden;
+}
+
+html[data-theme-pending="default"] .site-header:not([data-site-header-theme="default"]),
+html[data-theme-pending="refined"] .site-header:not([data-site-header-theme="refined"]),
+html[data-theme-pending="editorial"] .site-header:not([data-site-header-theme="editorial"]),
+html[data-theme-pending="terminal"] .site-header:not([data-site-header-theme="terminal"]),
+html[data-theme-pending="clarity"] .site-header:not([data-site-header-theme="clarity"]) {
+  visibility: hidden;
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

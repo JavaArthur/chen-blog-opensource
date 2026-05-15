@@ -3,6 +3,7 @@ import { isAdminAuthenticated, COOKIE_NAME } from '@/lib/admin-auth'
 import { invalidatePublicContentCache } from '@/lib/cache'
 import { buildAutoDescription, normalizePostSlug } from '@/lib/post-utils'
 import { enqueueBackgroundJob } from '@/lib/background-jobs'
+import { renderPostMarkdownToHtml } from '@/lib/post-render'
 import { getRouteContextWithDb, jsonError, jsonOk, parseJsonBody } from '@/lib/server/route-helpers'
 import type { NextRequest } from 'next/server'
 
@@ -75,12 +76,15 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     const normalizedDescription = typeof description === 'string' && description.trim()
       ? description.trim()
       : buildAutoDescription(typeof content === 'string' ? content : '')
+    const nextHtml = typeof html === 'string'
+      ? html
+      : (typeof content === 'string' ? await renderPostMarkdownToHtml(content) : undefined)
 
     await updatePost(db, post.id, {
       slug: nextSlug || undefined,
       title,
       content,
-      html,
+      html: nextHtml,
       category,
       status,
       password,

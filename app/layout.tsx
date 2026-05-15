@@ -4,7 +4,7 @@ import "./globals.css";
 import { GlobalShortcuts } from "@/components/GlobalShortcuts";
 import { ToastProvider } from "@/components/Toast";
 import { CustomJsInjector } from "@/components/CustomJsInjector";
-import { FONT_CONFIG, THEME_OPTIONS, THEME_STORAGE_KEY } from "@/lib/appearance";
+import { FONT_CONFIG, normalizeTheme, THEME_OPTIONS, THEME_STORAGE_KEY, type Theme } from "@/lib/appearance";
 import { getAppCloudflareEnv } from "@/lib/cloudflare";
 import { getSetting } from "@/lib/db";
 import { getSiteUrl, getSiteUrlObject } from "@/lib/site-config";
@@ -91,15 +91,18 @@ export default async function RootLayout({
 }>) {
   let customJs = ''
   let bodyFont = ''
+  let defaultTheme: Theme = 'default'
   try {
     const env = await getAppCloudflareEnv()
     if (env?.DB) {
-      const [customJsValue, bodyFontValue] = await Promise.all([
+      const [customJsValue, bodyFontValue, defaultThemeValue] = await Promise.all([
         getSetting(env.DB, 'custom_js'),
         getSetting(env.DB, 'body_font'),
+        getSetting(env.DB, 'default_theme'),
       ])
       customJs = customJsValue || ''
       bodyFont = bodyFontValue || ''
+      defaultTheme = normalizeTheme(defaultThemeValue)
     }
   } catch {}
 
@@ -110,6 +113,7 @@ export default async function RootLayout({
 (function(){
   var f = ${JSON.stringify(FONT_CONFIG)};
   var k = "${bodyFont || ''}";
+  var defaultTheme = "${defaultTheme}";
   var themeStorageKey = "${THEME_STORAGE_KEY}";
   var validThemes = ${JSON.stringify(validThemes)};
   function isTheme(value) {
@@ -141,7 +145,11 @@ export default async function RootLayout({
   applyFont(k);
   try {
     var savedTheme = window.localStorage.getItem(themeStorageKey);
-    if (isTheme(savedTheme)) applyTheme(savedTheme);
+    var nextTheme = isTheme(savedTheme) ? savedTheme : defaultTheme;
+    applyTheme(nextTheme);
+    if (isTheme(savedTheme) && savedTheme !== defaultTheme) {
+      document.documentElement.setAttribute('data-theme-pending', savedTheme);
+    }
   } catch (e) {}
 })();
 `
@@ -151,6 +159,7 @@ export default async function RootLayout({
       lang="zh-CN"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       data-font={bodyFont || 'default'}
+      data-theme={defaultTheme === 'default' ? undefined : defaultTheme}
       suppressHydrationWarning
     >
       <head>
