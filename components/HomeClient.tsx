@@ -28,6 +28,9 @@ const ThemeComponents: Record<string, React.ComponentType<HomeProps>> = {
   editorial: dynamic<HomeProps>(() =>
     import('@/components/themes/HomeVariantB').then(m => m.HomeVariantB)
   ),
+  'warm-editorial': dynamic<HomeProps>(() =>
+    import('@/components/themes/HomeWarmEditorial').then(m => m.HomeWarmEditorial)
+  ),
   terminal: dynamic<HomeProps>(() =>
     import('@/components/themes/HomeVariantC').then(m => m.HomeVariantC)
   ),

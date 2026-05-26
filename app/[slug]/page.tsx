@@ -13,6 +13,7 @@ import { getSiteHeaderData } from '@/lib/site'
 import { getRelatedPosts } from '@/lib/related-content'
 import { getPublicContentCacheNamespace } from '@/lib/cache'
 import { getSiteUrl } from '@/lib/site-config'
+import { resolveRequestTheme } from '@/lib/server-appearance'
 
 // Cloudflare Workers 缓存策略
 export const revalidate = 86400 // 24小时缓存
@@ -99,6 +100,7 @@ export default async function PostPage({
   if (!isPubliclyAccessiblePost(post)) notFound()
 
   const headerData = await getSiteHeaderData(db)
+  const requestTheme = await resolveRequestTheme(headerData.defaultTheme)
   const categorySlugMap = new Map(headerData.categories.map((category) => [category.name, category.slug]))
   const activeCategorySlug = headerData.categories.find((category) => category.name === post.category)?.slug ?? null
 
@@ -111,7 +113,7 @@ export default async function PostPage({
       return (
         <div className="min-h-screen bg-[var(--background)] flex flex-col">
           <SiteHeader
-            initialTheme={headerData.defaultTheme}
+            initialTheme={requestTheme}
             navLinks={headerData.navLinks}
             categories={headerData.categories}
             activeCategorySlug={activeCategorySlug}
@@ -143,7 +145,7 @@ export default async function PostPage({
       return (
         <div className="min-h-screen bg-[var(--background)] flex flex-col">
           <SiteHeader
-            initialTheme={headerData.defaultTheme}
+            initialTheme={requestTheme}
             navLinks={headerData.navLinks}
             categories={headerData.categories}
             activeCategorySlug={activeCategorySlug}
@@ -184,7 +186,7 @@ export default async function PostPage({
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <SiteHeader
-        initialTheme={headerData.defaultTheme}
+        initialTheme={requestTheme}
         navLinks={headerData.navLinks}
         categories={headerData.categories}
         activeCategorySlug={activeCategorySlug}

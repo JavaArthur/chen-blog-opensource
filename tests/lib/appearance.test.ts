@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { getClientThemePreference, subscribeToThemeChange, THEME_STORAGE_KEY } from '@/lib/appearance'
+import { getClientThemePreference, isTheme, subscribeToThemeChange, THEME_CHANGE_EVENT, THEME_COOKIE_NAME } from '@/lib/appearance'
 
 describe('appearance helpers', () => {
   afterEach(() => {
@@ -10,27 +10,25 @@ describe('appearance helpers', () => {
     expect(getClientThemePreference('clarity')).toBe('clarity')
   })
 
-  it('uses the server-provided fallback when localStorage has no saved theme', () => {
-    vi.stubGlobal('window', {
-      localStorage: {
-        getItem: vi.fn(() => null),
-      },
-    })
+  it('uses the server-provided fallback when the theme cookie is missing', () => {
+    vi.stubGlobal('window', {})
+    vi.stubGlobal('document', { cookie: '' })
 
     expect(getClientThemePreference('terminal')).toBe('terminal')
   })
 
   it('prefers a valid saved client theme over the fallback', () => {
-    vi.stubGlobal('window', {
-      localStorage: {
-        getItem: vi.fn(() => 'editorial'),
-      },
-    })
+    vi.stubGlobal('window', {})
+    vi.stubGlobal('document', { cookie: `${THEME_COOKIE_NAME}=editorial` })
 
     expect(getClientThemePreference('terminal')).toBe('editorial')
   })
 
-  it('subscribes to same-tab theme changes and cross-tab storage changes', () => {
+  it('accepts the warm editorial theme id', () => {
+    expect(isTheme('warm-editorial')).toBe(true)
+  })
+
+  it('subscribes to same-tab theme changes', () => {
     const listeners = new Map<string, EventListener>()
     const onStoreChange = vi.fn()
 
@@ -45,11 +43,9 @@ describe('appearance helpers', () => {
 
     const unsubscribe = subscribeToThemeChange(onStoreChange)
 
-    listeners.get('qm-theme-change')?.(new Event('qm-theme-change'))
-    listeners.get('storage')?.({ key: THEME_STORAGE_KEY } as StorageEvent)
-    listeners.get('storage')?.({ key: 'other-key' } as StorageEvent)
+    listeners.get(THEME_CHANGE_EVENT)?.(new Event(THEME_CHANGE_EVENT))
 
-    expect(onStoreChange).toHaveBeenCalledTimes(2)
+    expect(onStoreChange).toHaveBeenCalledTimes(1)
 
     unsubscribe()
     expect(listeners.size).toBe(0)

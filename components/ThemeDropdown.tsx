@@ -3,11 +3,10 @@
 import { useState, useRef, useEffect, useSyncExternalStore } from 'react'
 import { ChevronDown } from 'lucide-react'
 import {
+  setClientThemePreference,
   getClientThemePreference,
   subscribeToThemeChange,
-  THEME_CHANGE_EVENT,
   THEME_OPTIONS,
-  THEME_STORAGE_KEY,
   type Theme,
 } from '@/lib/appearance'
 
@@ -15,7 +14,7 @@ export type { Theme }
 
 export function dispatchThemeChange(theme: Theme) {
   if (typeof window === 'undefined') return
-  window.dispatchEvent(new CustomEvent(THEME_CHANGE_EVENT, { detail: { theme } }))
+  setClientThemePreference(theme)
 }
 
 interface ThemeDropdownProps {
@@ -59,15 +58,7 @@ export function ThemeDropdown({
 
   const handleChange = (t: Theme) => {
     setOpen(false)
-    localStorage.setItem(THEME_STORAGE_KEY, t)
-    // Update data-theme on <html>
-    if (t === 'default') {
-      document.documentElement.removeAttribute('data-theme')
-    } else {
-      document.documentElement.setAttribute('data-theme', t)
-    }
-    // Notify other listeners (HomeClient for layout switching)
-    dispatchThemeChange(t)
+    setClientThemePreference(t)
     onThemeChange?.(t)
   }
 

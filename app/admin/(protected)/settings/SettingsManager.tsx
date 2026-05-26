@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Tabs } from '@/components/Tabs'
 import type { RuntimeCapabilities } from '@/lib/runtime-capabilities'
-import { normalizeTheme, type BodyFont, type Theme } from '@/lib/appearance'
+import { normalizeTheme, setClientThemePreference, type BodyFont, type Theme } from '@/lib/appearance'
 import { NavLinksEditor } from './NavLinksEditor'
 import { CustomJsEditor } from './CustomJsEditor'
 import { ApiTokensManager } from './ApiTokensManager'
@@ -73,6 +73,7 @@ export function SettingsManager({
         persistSetting('default_theme', theme),
         persistSetting('body_font', font),
       ])
+      setClientThemePreference(theme)
       setMsg('已保存')
       setTimeout(() => setMsg(''), 2000)
     } catch (e) {

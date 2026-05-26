@@ -1,5 +1,7 @@
-export const THEME_STORAGE_KEY = 'qm_site_theme'
+export const THEME_COOKIE_NAME = 'qm_site_theme'
+export const THEME_STORAGE_KEY = THEME_COOKIE_NAME
 export const THEME_CHANGE_EVENT = 'qm-theme-change'
+const THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
 export const THEME_OPTIONS = [
   {
@@ -16,6 +18,11 @@ export const THEME_OPTIONS = [
     id: 'editorial',
     label: '杂志编辑',
     description: '更强视觉层次的刊物风格',
+  },
+  {
+    id: 'warm-editorial',
+    label: '暖调编辑',
+    description: 'Claude 暖调与 Wired 刊物感融合的独立内容首页',
   },
   {
     id: 'terminal',
@@ -81,10 +88,43 @@ export function normalizeTheme(value: string | null | undefined, fallback: Theme
   return isTheme(value) ? value : fallback
 }
 
+function readCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null
+
+  const match = document.cookie
+    .split('; ')
+    .find((item) => item.startsWith(`${name}=`))
+
+  return match ? decodeURIComponent(match.slice(name.length + 1)) : null
+}
+
+export function applyClientTheme(theme: Theme) {
+  if (typeof document === 'undefined') return
+
+  if (theme === 'default') {
+    document.documentElement.removeAttribute('data-theme')
+  } else {
+    document.documentElement.setAttribute('data-theme', theme)
+  }
+  document.documentElement.removeAttribute('data-theme-pending')
+}
+
+export function setClientThemePreference(theme: Theme) {
+  if (typeof document === 'undefined') return
+
+  document.cookie = `${THEME_COOKIE_NAME}=${encodeURIComponent(theme)}; Path=/; Max-Age=${THEME_COOKIE_MAX_AGE}; SameSite=Lax`
+  try {
+    window.localStorage.removeItem(THEME_STORAGE_KEY)
+  } catch {}
+
+  applyClientTheme(theme)
+  window.dispatchEvent(new CustomEvent(THEME_CHANGE_EVENT, { detail: { theme } }))
+}
+
 export function getClientThemePreference(fallback: Theme = 'default'): Theme {
   if (typeof window === 'undefined') return fallback
 
-  const saved = window.localStorage.getItem(THEME_STORAGE_KEY)
+  const saved = readCookie(THEME_COOKIE_NAME)
   if (isTheme(saved)) return saved
 
   return fallback
@@ -96,14 +136,9 @@ export function subscribeToThemeChange(onStoreChange: () => void): () => void {
   }
 
   const handler = () => onStoreChange()
-  const storageHandler = (event: StorageEvent) => {
-    if (event.key === THEME_STORAGE_KEY) onStoreChange()
-  }
   window.addEventListener(THEME_CHANGE_EVENT, handler)
-  window.addEventListener('storage', storageHandler)
 
   return () => {
     window.removeEventListener(THEME_CHANGE_EVENT, handler)
-    window.removeEventListener('storage', storageHandler)
   }
 }

@@ -6,6 +6,7 @@ import { SiteFooter } from '@/components/SiteFooter'
 import type { SiteCategoryLink, SiteNavLink } from '@/lib/site'
 import { getSiteHeaderData } from '@/lib/site'
 import type { Theme } from '@/lib/appearance'
+import { resolveRequestTheme } from '@/lib/server-appearance'
 
 export const metadata = {
   title: '搜索结果',
@@ -50,11 +51,12 @@ export default async function SearchPage({
   }
 
   const categorySlugMap = new Map(categories.map((category) => [category.name, category.slug]))
+  const requestTheme = await resolveRequestTheme(defaultTheme)
 
   return (
     <div className="min-h-full flex flex-col bg-[var(--background)]">
       <SiteHeader
-        initialTheme={defaultTheme}
+        initialTheme={requestTheme}
         navLinks={navLinks}
         categories={categories}
       />

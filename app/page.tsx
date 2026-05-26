@@ -5,6 +5,7 @@ import type { SiteCategoryLink, SiteNavLink } from '@/lib/site'
 import { getSiteHeaderData } from '@/lib/site'
 import { HomeClient } from '@/components/HomeClient'
 import { getSiteUrl } from '@/lib/site-config'
+import { resolveRequestTheme } from '@/lib/server-appearance'
 
 const PAGE_SIZE = 25
 const BASE_URL = getSiteUrl()
@@ -50,6 +51,7 @@ export default async function Home({
   }
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  const requestTheme = await resolveRequestTheme(defaultTheme)
   const categorySlugMap: Record<string, string> = Object.fromEntries(
     categories.map((cat) => [cat.name, cat.slug])
   )
@@ -86,7 +88,7 @@ export default async function Home({
         }}
       />
       <HomeClient
-        initialTheme={defaultTheme}
+        initialTheme={requestTheme}
         posts={posts}
         categories={categories}
         navLinks={navLinks}

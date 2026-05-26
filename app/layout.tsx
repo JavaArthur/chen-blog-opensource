@@ -4,9 +4,10 @@ import "./globals.css";
 import { GlobalShortcuts } from "@/components/GlobalShortcuts";
 import { ToastProvider } from "@/components/Toast";
 import { CustomJsInjector } from "@/components/CustomJsInjector";
-import { FONT_CONFIG, normalizeTheme, THEME_OPTIONS, THEME_STORAGE_KEY, type Theme } from "@/lib/appearance";
+import { FONT_CONFIG, normalizeTheme, THEME_COOKIE_NAME, THEME_OPTIONS, THEME_STORAGE_KEY, type Theme } from "@/lib/appearance";
 import { getAppCloudflareEnv } from "@/lib/cloudflare";
 import { getSetting } from "@/lib/db";
+import { resolveRequestTheme } from "@/lib/server-appearance";
 import { getSiteUrl, getSiteUrlObject } from "@/lib/site-config";
 
 const geistSans = localFont({
@@ -107,17 +108,28 @@ export default async function RootLayout({
   } catch {}
 
   const font = FONT_CONFIG[bodyFont]
+  const requestTheme = await resolveRequestTheme(defaultTheme)
   const validThemes = THEME_OPTIONS.map((theme) => theme.id)
 
   const appearanceApplyScript = `
 (function(){
   var f = ${JSON.stringify(FONT_CONFIG)};
   var k = "${bodyFont || ''}";
-  var defaultTheme = "${defaultTheme}";
-  var themeStorageKey = "${THEME_STORAGE_KEY}";
+  var initialTheme = "${requestTheme}";
+  var themeCookieName = "${THEME_COOKIE_NAME}";
+  var legacyThemeStorageKey = "${THEME_STORAGE_KEY}";
   var validThemes = ${JSON.stringify(validThemes)};
   function isTheme(value) {
     return validThemes.indexOf(value) !== -1;
+  }
+  function readCookie(name) {
+    var parts = document.cookie ? document.cookie.split('; ') : [];
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i].indexOf(name + '=') === 0) {
+        return decodeURIComponent(parts[i].slice(name.length + 1));
+      }
+    }
+    return null;
   }
   function applyFont(key) {
     var c = f[key];
@@ -144,10 +156,11 @@ export default async function RootLayout({
   }
   applyFont(k);
   try {
-    var savedTheme = window.localStorage.getItem(themeStorageKey);
-    var nextTheme = isTheme(savedTheme) ? savedTheme : defaultTheme;
+    window.localStorage.removeItem(legacyThemeStorageKey);
+    var savedTheme = readCookie(themeCookieName);
+    var nextTheme = isTheme(savedTheme) ? savedTheme : initialTheme;
     applyTheme(nextTheme);
-    if (isTheme(savedTheme) && savedTheme !== defaultTheme) {
+    if (isTheme(savedTheme) && savedTheme !== initialTheme) {
       document.documentElement.setAttribute('data-theme-pending', savedTheme);
     }
   } catch (e) {}
@@ -159,7 +172,7 @@ export default async function RootLayout({
       lang="zh-CN"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       data-font={bodyFont || 'default'}
-      data-theme={defaultTheme === 'default' ? undefined : defaultTheme}
+      data-theme={requestTheme === 'default' ? undefined : requestTheme}
       suppressHydrationWarning
     >
       <head>

@@ -35,6 +35,17 @@ const registry: ThemeConfig[] = [
     component: () => import('@/components/themes/HomeVariantB').then(m => ({ default: m.HomeVariantB })),
   },
   {
+    id: 'warm-editorial',
+    label: '暖调编辑',
+    description: 'Claude 暖调与 Wired 刊物感融合的独立内容首页',
+    fonts: [
+      { id: 'qm-cormorant-garamond', href: 'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&display=swap' },
+      { id: 'qm-jetbrains-mono', href: 'https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap' },
+      { id: 'qm-noto-serif-sc', href: 'https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&display=swap' },
+    ],
+    component: () => import('@/components/themes/HomeWarmEditorial').then(m => ({ default: m.HomeWarmEditorial })),
+  },
+  {
     id: 'terminal',
     label: 'AI 终端',
     description: '偏技术感的深色终端界面',

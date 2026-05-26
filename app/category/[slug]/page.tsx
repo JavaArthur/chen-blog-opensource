@@ -7,6 +7,7 @@ import { SiteFooter } from '@/components/SiteFooter'
 import { Pagination } from '@/components/Pagination'
 import { getSiteHeaderData } from '@/lib/site'
 import { getSiteUrl } from '@/lib/site-config'
+import { resolveRequestTheme } from '@/lib/server-appearance'
 
 const PAGE_SIZE = 25
 const BASE_URL = getSiteUrl()
@@ -74,11 +75,12 @@ export default async function CategoryPage({
   ])
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE))
+  const requestTheme = await resolveRequestTheme(headerData.defaultTheme)
 
   return (
     <div className="min-h-full flex flex-col bg-[var(--background)]">
       <SiteHeader
-        initialTheme={headerData.defaultTheme}
+        initialTheme={requestTheme}
         navLinks={headerData.navLinks}
         categories={headerData.categories}
         activeCategorySlug={slug}
