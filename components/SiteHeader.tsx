@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useRef, useEffect, useSyncExternalStore } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Menu, X, ChevronDown } from 'lucide-react'
 import { SearchEntry } from './SearchEntry'
 import { ThemeDropdown } from '@/components/ThemeDropdown'
@@ -40,11 +40,15 @@ export function SiteHeader({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [categoryOpen, setCategoryOpen] = useState(false)
   const categoryRef = useRef<HTMLDivElement>(null)
-  const theme = useSyncExternalStore(
-    subscribeToThemeChange,
-    () => getClientThemePreference(initialTheme),
-    () => initialTheme,
-  )
+  // 首屏（含 hydration）使用 initialTheme 保持与 SSR/ISR 缓存 HTML 一致，
+  // 挂载后再切到客户端真实主题，避免缓存页与个性化主题冲突的 hydration mismatch (React #418)。
+  const [theme, setTheme] = useState<Theme>(initialTheme)
+
+  useEffect(() => {
+    const sync = () => setTheme(getClientThemePreference(initialTheme))
+    sync()
+    return subscribeToThemeChange(sync)
+  }, [initialTheme])
 
   // 点击外部关闭分类下拉
   useEffect(() => {
@@ -205,6 +209,8 @@ export function SiteHeader({
             )}
 
             {links.map(link => renderLink(link))}
+            <Link href="/clippings" className="text-[var(--editor-muted)] hover:text-[var(--editor-ink)] transition-colors duration-150">剪报</Link>
+            <Link href="/tools" className="text-[var(--editor-muted)] hover:text-[var(--editor-ink)] transition-colors duration-150">工具</Link>
             <ThemeDropdown initialTheme={initialTheme} />
             <SearchEntry />
           </nav>
@@ -265,6 +271,12 @@ export function SiteHeader({
           )}
 
           <nav className="flex flex-col text-sm">
+            <div className="px-4 py-3 border-b border-[var(--editor-line)]">
+              <Link href="/clippings" className="text-[var(--editor-muted)] hover:text-[var(--editor-ink)] transition-colors" onClick={() => setMobileMenuOpen(false)}>剪报</Link>
+            </div>
+            <div className="px-4 py-3 border-b border-[var(--editor-line)]">
+              <Link href="/tools" className="text-[var(--editor-muted)] hover:text-[var(--editor-ink)] transition-colors" onClick={() => setMobileMenuOpen(false)}>工具</Link>
+            </div>
             {links.map(link => (
               <div key={link.label} className="px-4 py-3 border-b border-[var(--editor-line)]">
                 {renderLink(link, () => setMobileMenuOpen(false))}

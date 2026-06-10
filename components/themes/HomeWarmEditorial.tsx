@@ -13,6 +13,7 @@ function formatDate(ts: number) {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
+    timeZone: 'Asia/Shanghai',
   })
 }
 
@@ -20,6 +21,7 @@ function formatIssueDate() {
   return new Date().toLocaleDateString('zh-CN', {
     year: 'numeric',
     month: 'long',
+    timeZone: 'Asia/Shanghai',
   })
 }
 
@@ -40,10 +42,18 @@ function PostMarker({ post }: { post: PostWithTags }) {
   )
 }
 
-function CoverFrame({ post, size = 'large' }: { post: PostWithTags; size?: 'large' | 'small' }) {
+function CoverFrame({
+  post,
+  size = 'large',
+}: {
+  post: PostWithTags
+  size?: 'large' | 'small' | 'thumb'
+}) {
   const [failed, setFailed] = useState(false)
 
-  if (post.cover_image && !failed) {
+  if (!post.cover_image) return null
+
+  if (!failed) {
     return (
       <div className={`warm-editorial-cover warm-editorial-cover-${size}`}>
         <img
@@ -75,6 +85,7 @@ export function HomeWarmEditorial({
   const featured = posts[0] ?? null
   const sideStories = posts.slice(1, 3)
   const rest = posts.slice(3)
+  const featuredHasCover = Boolean(featured?.cover_image)
 
   return (
     <div className="theme-home-warm-editorial min-h-full flex flex-col">
@@ -117,10 +128,13 @@ export function HomeWarmEditorial({
         ) : (
           <>
             {featured && (
-              <section className="warm-editorial-lead">
-                <Link href={`/${featured.slug}`} className="warm-editorial-lead-main">
-                  <CoverFrame post={featured} />
-                  <div>
+              <section className={`warm-editorial-lead ${featuredHasCover ? 'warm-editorial-lead-with-cover' : 'warm-editorial-lead-text-only'}`}>
+                <Link
+                  href={`/${featured.slug}`}
+                  className={`warm-editorial-lead-main ${featuredHasCover ? 'warm-editorial-lead-main-with-cover' : 'warm-editorial-lead-main-text-only'}`}
+                >
+                  {featuredHasCover && <CoverFrame post={featured} />}
+                  <div className="warm-editorial-lead-copy">
                     <div className="warm-editorial-eyebrow">
                       <span>HEADLINE</span>
                       {featured.category && <span>{featured.category}</span>}
@@ -137,8 +151,12 @@ export function HomeWarmEditorial({
                 {sideStories.length > 0 && (
                   <div className="warm-editorial-side-stack">
                     {sideStories.map((post) => (
-                      <Link key={post.slug} href={`/${post.slug}`} className="warm-editorial-side-item">
-                        <CoverFrame post={post} size="small" />
+                      <Link
+                        key={post.slug}
+                        href={`/${post.slug}`}
+                        className={`warm-editorial-side-item ${post.cover_image ? 'warm-editorial-side-item-with-cover' : 'warm-editorial-side-item-text-only'}`}
+                      >
+                        {post.cover_image && <CoverFrame post={post} size="small" />}
                         <div>
                           <div className="warm-editorial-eyebrow">
                             {post.category && <span>{post.category}</span>}
@@ -168,26 +186,36 @@ export function HomeWarmEditorial({
                     const categoryHref = getCategoryHref(post, categorySlugMap)
 
                     return (
-                      <article key={post.slug} className="warm-editorial-story">
+                      <article
+                        key={post.slug}
+                        className={`warm-editorial-story ${post.cover_image ? 'warm-editorial-story-with-cover' : ''}`}
+                      >
                         <div className="warm-editorial-story-count">
                           {String(index + 4).padStart(2, '0')}
                         </div>
-                        <Link href={`/${post.slug}`} className="warm-editorial-story-body">
-                          <h3>{post.title}</h3>
-                          {post.description && <p>{post.description}</p>}
-                          <div className="warm-editorial-meta">
-                            <time>{formatDate(post.published_at)}</time>
-                            <PostMarker post={post} />
-                          </div>
-                        </Link>
-                        {post.category && (
-                          categoryHref ? (
-                            <Link href={categoryHref} className="warm-editorial-story-category">
-                              {post.category}
-                            </Link>
-                          ) : (
-                            <span className="warm-editorial-story-category">{post.category}</span>
-                          )
+                        <div className="warm-editorial-story-content">
+                          {post.category && (
+                            categoryHref ? (
+                              <Link href={categoryHref} className="warm-editorial-story-kicker">
+                                {post.category}
+                              </Link>
+                            ) : (
+                              <span className="warm-editorial-story-kicker">{post.category}</span>
+                            )
+                          )}
+                          <Link href={`/${post.slug}`} className="warm-editorial-story-body">
+                            <h3>{post.title}</h3>
+                            {post.description && <p>{post.description}</p>}
+                            <div className="warm-editorial-meta">
+                              <time>{formatDate(post.published_at)}</time>
+                              <PostMarker post={post} />
+                            </div>
+                          </Link>
+                        </div>
+                        {post.cover_image && (
+                          <Link href={`/${post.slug}`} className="warm-editorial-story-media" aria-label={post.title}>
+                            <CoverFrame post={post} size="thumb" />
+                          </Link>
                         )}
                       </article>
                     )

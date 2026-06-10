@@ -1,7 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useEffect, useMemo, useSyncExternalStore } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getClientThemePreference, subscribeToThemeChange, type Theme } from '@/lib/appearance'
 import { getThemeConfig } from '@/lib/theme-registry'
 import type { PostWithTags } from '@/lib/db'
@@ -51,11 +51,15 @@ function injectFont(id: string, href: string) {
 }
 
 export function HomeClient(props: HomeProps) {
-  const theme = useSyncExternalStore(
-    subscribeToThemeChange,
-    () => getClientThemePreference(props.initialTheme),
-    () => props.initialTheme,
-  )
+  // 首屏（含 hydration）严格使用服务端传入的 initialTheme，确保与 SSR/ISR 缓存的 HTML 一致；
+  // 挂载后再读取客户端 cookie 切换到真实主题，避免 ISR 缓存页与个性化主题冲突导致的 hydration mismatch (React #418)。
+  const [theme, setTheme] = useState<Theme>(props.initialTheme)
+
+  useEffect(() => {
+    const sync = () => setTheme(getClientThemePreference(props.initialTheme))
+    sync()
+    return subscribeToThemeChange(sync)
+  }, [props.initialTheme])
 
   const config = useMemo(() => getThemeConfig(theme), [theme])
 

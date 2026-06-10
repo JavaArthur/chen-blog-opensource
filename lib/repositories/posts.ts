@@ -6,6 +6,7 @@ import type {
   Post,
   PostAiSnapshotRow,
   PostCategoryRow,
+  PostKind,
   PostWithTags,
   StatsRow,
 } from '@/lib/repositories/types'
@@ -19,6 +20,7 @@ export async function getPosts(
   includeEncrypted = false,
   includeHidden = false,
   includeDeleted = false,
+  kind?: PostKind,
 ): Promise<PostWithTags[]> {
   await ensureSchema(db)
   const conditions: string[] = []
@@ -34,21 +36,40 @@ export async function getPosts(
   if (!includeHidden) {
     conditions.push('is_hidden = 0')
   }
+  const binds: unknown[] = []
+  if (kind) {
+    // 兼容历史数据：老文章 kind 为 NULL，视作 'post'
+    conditions.push(kind === 'post' ? "(kind = 'post' OR kind IS NULL)" : 'kind = ?')
+    if (kind !== 'post') binds.push(kind)
+  }
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
 
   const { results } = await db
     .prepare(
-      `SELECT id, slug, title, description, category, tags, status, password, is_pinned, is_hidden, cover_image, published_at, view_count
+      `SELECT id, slug, title, description, category, tags, status, password, is_pinned, is_hidden, cover_image, kind, source_url, published_at, view_count
        , deleted_at
        FROM posts
        ${where}
        ORDER BY is_pinned DESC, published_at DESC
        LIMIT ? OFFSET ?`,
     )
-    .bind(limit, offset)
+    .bind(...binds, limit, offset)
     .all<Post>()
 
   return results.map(mapPostWithTags)
+}
+
+// 剪报区：收藏的外部内容（kind='clipping'），首页主线不展示
+export async function getClippings(
+  db: Database,
+  limit = 50,
+  offset = 0,
+): Promise<PostWithTags[]> {
+  return getPosts(db, limit, offset, false, false, false, false, 'clipping')
+}
+
+export async function getClippingsCount(db: Database): Promise<number> {
+  return getPostsCount(db, false, false, false, false, 'clipping')
 }
 
 export interface GetPostBySlugOptions {
@@ -149,6 +170,8 @@ export async function createPost(
     password?: string | null
     is_hidden?: number
     cover_image?: string | null
+    kind?: PostKind
+    source_url?: string | null
   },
 ): Promise<number> {
   await ensureSchema(db)
@@ -156,8 +179,8 @@ export async function createPost(
 
   const result = await db
     .prepare(
-      `INSERT INTO posts (slug, title, content, html, description, category, tags, status, password, is_hidden, cover_image)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO posts (slug, title, content, html, description, category, tags, status, password, is_hidden, cover_image, kind, source_url)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       data.slug,
@@ -171,6 +194,8 @@ export async function createPost(
       data.password ?? null,
       data.is_hidden ?? 0,
       data.cover_image ?? null,
+      data.kind ?? 'post',
+      data.source_url ?? null,
     )
     .run()
 
@@ -203,6 +228,8 @@ export async function updatePostBySlug(
     is_pinned: number
     is_hidden: number
     cover_image: string | null
+    source_url: string | null
+    kind: PostKind
   }>,
 ): Promise<void> {
   await ensureSchema(db)
@@ -236,6 +263,8 @@ export async function updatePost(
     is_pinned: number
     is_hidden: number
     cover_image: string | null
+    source_url: string | null
+    kind: PostKind
   }>,
 ): Promise<void> {
   await ensureSchema(db)
@@ -305,6 +334,14 @@ export async function updatePost(
     updates.push('cover_image = ?')
     values.push(data.cover_image)
   }
+  if (data.source_url !== undefined) {
+    updates.push('source_url = ?')
+    values.push(data.source_url)
+  }
+  if (data.kind !== undefined) {
+    updates.push('kind = ?')
+    values.push(data.kind)
+  }
 
   if (updates.length === 0) return
 
@@ -373,6 +410,7 @@ export async function getPostsCount(
   includeEncrypted = false,
   includeHidden = false,
   includeDeleted = false,
+  kind?: PostKind,
 ): Promise<number> {
   await ensureSchema(db)
   const conditions: string[] = []
@@ -388,9 +426,14 @@ export async function getPostsCount(
   if (!includeHidden) {
     conditions.push('is_hidden = 0')
   }
+  const binds: unknown[] = []
+  if (kind) {
+    conditions.push(kind === 'post' ? "(kind = 'post' OR kind IS NULL)" : 'kind = ?')
+    if (kind !== 'post') binds.push(kind)
+  }
   const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
   const sql = `SELECT COUNT(*) as count FROM posts ${where}`
-  const result = await db.prepare(sql).first<CountRow>()
+  const result = await db.prepare(sql).bind(...binds).first<CountRow>()
   return (result?.count as number) ?? 0
 }
 

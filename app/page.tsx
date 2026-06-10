@@ -39,8 +39,8 @@ export default async function Home({
     if (env?.DB) {
       const headerData = await getSiteHeaderData(env.DB)
       ;[posts, totalCount] = await Promise.all([
-        getPosts(env.DB, PAGE_SIZE, (currentPage - 1) * PAGE_SIZE),
-        getPostsCount(env.DB),
+        getPosts(env.DB, PAGE_SIZE, (currentPage - 1) * PAGE_SIZE, false, false, false, false, 'post'),
+        getPostsCount(env.DB, false, false, false, false, 'post'),
       ])
       navLinks = headerData.navLinks
       categories = headerData.categories

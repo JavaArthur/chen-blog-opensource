@@ -32,6 +32,12 @@ export async function POST(req: NextRequest) {
     const status = payload.status === 'draft' ? 'draft' : 'published'
     const password = typeof payload.password === 'string' && payload.password.trim() ? payload.password.trim() : null
     const is_hidden = payload.is_hidden === 1 ? 1 : 0
+    const sourceUrl = typeof payload.source_url === 'string' && payload.source_url.trim()
+      ? payload.source_url.trim()
+      : null
+    // 剪报：显式 kind='clipping' 或带了原文链接的外部收藏，归入剪报区，不进首页主线
+    const kind: 'post' | 'clipping' =
+      payload.kind === 'clipping' || sourceUrl ? 'clipping' : 'post'
     const description = typeof payload.description === 'string' && payload.description.trim()
       ? payload.description.trim()
       : buildAutoDescription(content)
@@ -72,6 +78,8 @@ export async function POST(req: NextRequest) {
       password,
       is_hidden,
       cover_image: coverImage,
+      kind,
+      source_url: sourceUrl,
     })
 
     // 6. 清除缓存
@@ -156,6 +164,14 @@ export async function PATCH(req: NextRequest) {
     if (payload.category !== undefined) updates.category = payload.category
     if (payload.tags !== undefined) updates.tags = payload.tags
     if (payload.cover_image !== undefined) updates.cover_image = payload.cover_image
+    if (payload.source_url !== undefined) {
+      updates.source_url = typeof payload.source_url === 'string' && payload.source_url.trim()
+        ? payload.source_url.trim()
+        : null
+    }
+    if (payload.kind === 'post' || payload.kind === 'clipping') {
+      updates.kind = payload.kind
+    }
     if (payload.status === 'draft' || payload.status === 'published' || payload.status === 'deleted') {
       updates.status = payload.status
     }

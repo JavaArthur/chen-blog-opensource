@@ -19,7 +19,7 @@ const MUTED = '#7a6f68'
 const BORDER = '#d8d2c8'
 
 function formatDate(ts: number) {
-  return new Date(ts * 1000).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
+  return new Date(ts * 1000).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Shanghai' })
 }
 
 function getIssueInfo() {

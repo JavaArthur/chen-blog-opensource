@@ -6,6 +6,7 @@ export {
   type Post,
   type PostAiSnapshotRow,
   type PostCategoryRow,
+  type PostKind,
   type PostWithTags,
   type SettingRow,
   type StatsRow,
@@ -14,6 +15,8 @@ export { mapPostWithTags, normalizePostStatus, parsePostTags } from '@/lib/repos
 export {
   createPost,
   deletePost,
+  getClippings,
+  getClippingsCount,
   getPostAiSnapshot,
   getPostBySlug,
   type GetPostBySlugOptions,

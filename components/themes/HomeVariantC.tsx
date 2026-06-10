@@ -8,6 +8,7 @@ import { SiteFooter } from '@/components/SiteFooter'
 import { SearchEntry } from '@/components/SearchEntry'
 import { Pagination } from '@/components/Pagination'
 import { ThemeDropdown } from '@/components/ThemeDropdown'
+import { formatDateCompact } from '@/components/themes/shared'
 import type { HomeProps } from '@/components/HomeClient'
 import type { SiteNavLink } from '@/lib/site'
 
@@ -17,14 +18,6 @@ const MUTED = '#5a6480'
 const BORDER = '#2a2f48'
 const ACCENT = '#4ade80'   // terminal green
 const ACCENT2 = '#fbbf24'  // amber
-
-function formatDateCompact(ts: number) {
-  const d = new Date(ts * 1000)
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
 
 function TerminalHeader({
   initialTheme,

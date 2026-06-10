@@ -11,6 +11,7 @@ function formatDate(ts: number) {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
+    timeZone: 'Asia/Shanghai',
   })
 }
 

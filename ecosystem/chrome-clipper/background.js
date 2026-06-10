@@ -212,6 +212,9 @@ async function clipPage(options = {}) {
       title: finalTitle,
       content: markdown,
       status: status || 'draft',
+      // 剪藏来源是外部网页，标记为剪报并保留原文出处
+      kind: 'clipping',
+      source_url: pageUrl,
     };
 
     if (category) {

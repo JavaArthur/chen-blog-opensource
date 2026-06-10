@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS posts (
   is_pinned INTEGER DEFAULT 0, -- 是否置顶
   is_hidden INTEGER DEFAULT 0, -- 是否隐藏（unlisted）
   cover_image TEXT, -- 封面图 URL
+  kind TEXT DEFAULT 'post', -- 内容类型：post（原创，进首页）/ clipping（剪报，进剪报区）
+  source_url TEXT, -- 剪报原文出处，原创为 NULL
   deleted_at INTEGER, -- 软删除时间戳，NULL 表示未删除
   published_at INTEGER DEFAULT (strftime('%s', 'now')),
   updated_at INTEGER DEFAULT (strftime('%s', 'now')),
@@ -49,6 +51,24 @@ CREATE INDEX IF NOT EXISTS idx_posts_published ON posts(published_at DESC);
 -- CREATE TRIGGER posts_ad AFTER DELETE ON posts BEGIN
 --   DELETE FROM posts_fts WHERE rowid = old.id;
 -- END;
+
+-- 工具墙：收藏的小工具/仓库/Mac 软件/任意好东西
+CREATE TABLE IF NOT EXISTS tools (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  url TEXT,                          -- 可空：other 类型未必有链接
+  type TEXT NOT NULL DEFAULT 'url',  -- url / repo / mac-app / other
+  description TEXT,                  -- 一句话：我为什么收它
+  tags TEXT,                         -- JSON 数组字符串
+  icon TEXT,                         -- favicon / 截图 URL
+  is_pinned INTEGER DEFAULT 0,
+  sort_order INTEGER DEFAULT 0,
+  created_at INTEGER DEFAULT (strftime('%s', 'now')),
+  updated_at INTEGER DEFAULT (strftime('%s', 'now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_tools_type ON tools(type);
+CREATE INDEX IF NOT EXISTS idx_tools_pinned ON tools(is_pinned DESC, sort_order ASC, created_at DESC);
 
 -- 分类统计表
 CREATE TABLE IF NOT EXISTS categories (
