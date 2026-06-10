@@ -14,6 +14,7 @@ import { getRelatedPosts } from '@/lib/related-content'
 import { getPublicContentCacheNamespace } from '@/lib/cache'
 import { getSiteUrl } from '@/lib/site-config'
 import { resolveRequestTheme } from '@/lib/server-appearance'
+import { formatDate } from '@/lib/format-date'
 
 // Cloudflare Workers 缓存策略
 export const revalidate = 86400 // 24小时缓存
@@ -267,11 +268,7 @@ export default async function PostPage({
                   </>
                 )}
                 <time>
-                  {new Date(post.published_at * 1000).toLocaleDateString('zh-CN', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
+                  {formatDate(post.published_at)}
                 </time>
                 <span aria-hidden>·</span>
                 <span>{post.view_count} 次阅读</span>
@@ -336,11 +333,7 @@ export default async function PostPage({
                             )
                           )}
                           <time>
-                            {new Date(item.published_at * 1000).toLocaleDateString('zh-CN', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
+                            {formatDate(item.published_at)}
                           </time>
                         </div>
                         <h3 className="text-base font-semibold leading-snug text-[var(--editor-ink)] group-hover:text-[var(--editor-accent)] transition-colors">

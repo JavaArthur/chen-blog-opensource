@@ -29,6 +29,7 @@ function formatDate(ts: number) {
   return date.toLocaleDateString('zh-CN', {
     month: '2-digit',
     day: '2-digit',
+    timeZone: 'Asia/Shanghai',
   })
 }
 

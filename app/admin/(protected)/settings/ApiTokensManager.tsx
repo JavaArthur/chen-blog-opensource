@@ -93,6 +93,7 @@ export function ApiTokensManager() {
       day: '2-digit',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'Asia/Shanghai',
     })
   }
 

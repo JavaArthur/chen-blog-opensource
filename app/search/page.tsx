@@ -7,18 +7,11 @@ import type { SiteCategoryLink, SiteNavLink } from '@/lib/site'
 import { getSiteHeaderData } from '@/lib/site'
 import type { Theme } from '@/lib/appearance'
 import { resolveRequestTheme } from '@/lib/server-appearance'
+import { formatDate } from '@/lib/format-date'
 
 export const metadata = {
   title: '搜索结果',
   robots: { index: false, follow: true },
-}
-
-function formatDate(ts: number) {
-  return new Date(ts * 1000).toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
 }
 
 export default async function SearchPage({

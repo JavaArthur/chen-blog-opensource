@@ -9,6 +9,7 @@ import { SiteFooter } from '@/components/SiteFooter'
 import { SearchEntry } from '@/components/SearchEntry'
 import { Pagination } from '@/components/Pagination'
 import { ThemeDropdown } from '@/components/ThemeDropdown'
+import { currentIssueInfo, currentYear } from '@/lib/format-date'
 import type { HomeProps } from '@/components/HomeClient'
 import type { SiteNavLink } from '@/lib/site'
 
@@ -23,11 +24,7 @@ function formatDate(ts: number) {
 }
 
 function getIssueInfo() {
-  const now = new Date()
-  const month = now.getMonth() + 1
-  const year = now.getFullYear()
-  const vol = year - 2023
-  return { vol, month, year }
+  return currentIssueInfo()
 }
 
 function EditorialNavBar({
@@ -396,7 +393,7 @@ export function HomeVariantB({
         fontFamily: '"JetBrains Mono", ui-monospace, monospace',
         letterSpacing: '0.1em',
       }}>
-        <span>© {new Date().getFullYear()} 晨启AI博客</span>
+        <span>© {currentYear()} 晨启AI博客</span>
         <span>独立 · 不商业化 · RSS 友好</span>
       </div>
 

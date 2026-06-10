@@ -4,16 +4,8 @@ import Link from 'next/link'
 import { SiteHeader } from '@/components/SiteHeader'
 import { SiteFooter } from '@/components/SiteFooter'
 import { Pagination } from '@/components/Pagination'
+import { formatDate } from '@/components/themes/shared'
 import type { HomeProps } from '@/components/HomeClient'
-
-function formatDate(ts: number) {
-  return new Date(ts * 1000).toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'Asia/Shanghai',
-  })
-}
 
 export function HomeDefault({
   initialTheme,

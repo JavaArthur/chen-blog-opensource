@@ -8,6 +8,7 @@ import { Pagination } from '@/components/Pagination'
 import { getSiteHeaderData } from '@/lib/site'
 import { getSiteUrl } from '@/lib/site-config'
 import { resolveRequestTheme } from '@/lib/server-appearance'
+import { formatDate } from '@/lib/format-date'
 
 const PAGE_SIZE = 25
 const BASE_URL = getSiteUrl()
@@ -19,14 +20,6 @@ export const metadata = {
   title: '剪报',
   description: '收藏的好文章与外部内容，带原文出处。',
   alternates: { canonical: `${BASE_URL}/clippings` },
-}
-
-function formatDate(ts: number) {
-  return new Date(ts * 1000).toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
 }
 
 function sourceHost(url: string | null): string | null {

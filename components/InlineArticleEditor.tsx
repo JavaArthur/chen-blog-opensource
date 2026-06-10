@@ -20,6 +20,7 @@ import { DownloadMarkdown } from '@/components/DownloadMarkdown'
 import { ImageGenerationModal } from '@/components/ImageGenerationModal'
 import { ImageCropModal } from '@/components/ImageCropModal'
 import { Tooltip } from '@/components/Tooltip'
+import { formatDate } from '@/lib/format-date'
 import { AIModal } from '@/lib/ai-modal'
 import { EDITOR_IMAGE_OPTIMIZE_OPTIONS, optimizeImageForUpload } from '@/lib/client-image'
 import {
@@ -479,11 +480,7 @@ export function InlineArticleEditor({
           <>
             <span aria-hidden>·</span>
             <time>
-              {new Date(publishedAt * 1000).toLocaleDateString('zh-CN', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-              })}
+              {formatDate(publishedAt)}
             </time>
           </>
         )}

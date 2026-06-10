@@ -114,7 +114,7 @@ export function ProviderListTable<T extends BaseProviderProfile>({
               </td>
               <td className="hidden px-3 py-2 text-[var(--editor-muted)] md:table-cell">{profile.model}</td>
               <td className="hidden px-3 py-2 text-[var(--editor-muted)] lg:table-cell">
-                {profile.updated_at ? new Date(profile.updated_at * 1000).toLocaleString('zh-CN') : '-'}
+                {profile.updated_at ? new Date(profile.updated_at * 1000).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) : '-'}
               </td>
               <td className="px-3 py-2 text-right">
                 {profile.id !== defaultProfileId && profile.is_default !== 1 ? (

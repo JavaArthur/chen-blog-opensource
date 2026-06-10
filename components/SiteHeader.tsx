@@ -6,6 +6,7 @@ import { Menu, X, ChevronDown } from 'lucide-react'
 import { SearchEntry } from './SearchEntry'
 import { ThemeDropdown } from '@/components/ThemeDropdown'
 import { getClientThemePreference, subscribeToThemeChange, type Theme } from '@/lib/appearance'
+import { currentIssueInfo } from '@/lib/format-date'
 import type { SiteCategoryLink, SiteNavLink } from '@/lib/site'
 
 export type NavLink = SiteNavLink
@@ -25,8 +26,7 @@ const defaultNavLinks: NavLink[] = [
 ]
 
 function getIssueInfo() {
-  const now = new Date()
-  return { vol: now.getFullYear() - 2023, month: now.getMonth() + 1, year: now.getFullYear() }
+  return currentIssueInfo()
 }
 
 export function SiteHeader({

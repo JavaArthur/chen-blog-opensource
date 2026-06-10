@@ -85,6 +85,7 @@ function formatHistoryTime(timestamp: number) {
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'Asia/Shanghai',
     })
   } catch {
     return ''

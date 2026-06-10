@@ -8,6 +8,7 @@ import { Pagination } from '@/components/Pagination'
 import { getSiteHeaderData } from '@/lib/site'
 import { getSiteUrl } from '@/lib/site-config'
 import { resolveRequestTheme } from '@/lib/server-appearance'
+import { formatDate } from '@/lib/format-date'
 
 const PAGE_SIZE = 25
 const BASE_URL = getSiteUrl()
@@ -15,14 +16,6 @@ const BASE_URL = getSiteUrl()
 export const dynamicParams = true
 // ISR: 需要 open-next.config.ts 配置 incrementalCache + tagCache 才能生效
 export const revalidate = 3600
-
-function formatDate(ts: number) {
-  return new Date(ts * 1000).toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
 
 export async function generateMetadata({
   params,
