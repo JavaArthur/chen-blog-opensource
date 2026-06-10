@@ -24,6 +24,21 @@ function pick(re: RegExp, html: string): string | null {
   return m?.[1] ? decodeEntities(m[1]) : null
 }
 
+// 从 <link rel="...icon..."> 提取站点图标 href。
+// 逐标签解析以兼容 rel/href 任意书写顺序，并优先选用更高清的 apple-touch-icon。
+function pickIconHref(html: string): string | null {
+  const candidates: { rel: string; href: string }[] = []
+  for (const tag of html.match(/<link[^>]+>/gi) ?? []) {
+    const rel = tag.match(/\brel=["']([^"']*)["']/i)?.[1]?.toLowerCase()
+    const href = tag.match(/\bhref=["']([^"']+)["']/i)?.[1]
+    if (rel && href && rel.includes('icon')) {
+      candidates.push({ rel, href: decodeEntities(href) })
+    }
+  }
+  const apple = candidates.find((c) => c.rel.includes('apple-touch-icon'))
+  return (apple ?? candidates.find((c) => c.rel.includes('icon')))?.href ?? null
+}
+
 // 根据域名猜测工具类型
 function guessType(hostname: string): ToolType {
   if (/github\.com|gitlab\.com|gitee\.com|bitbucket\.org/i.test(hostname)) return 'repo'
@@ -77,9 +92,8 @@ export async function POST(req: NextRequest) {
       pick(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i, html) ||
       null
 
-    let icon =
-      pick(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i, html) ||
-      pick(/<link[^>]+rel=["'][^"']*icon[^"']*["'][^>]+href=["']([^"']+)["']/i, html)
+    // 站点图标只认 <link rel="icon">，不要用 og:image（那是分享大图/截图，不是图标）
+    let icon = pickIconHref(html)
     if (icon && !/^https?:\/\//i.test(icon)) {
       try {
         icon = new URL(icon, target.href).href
