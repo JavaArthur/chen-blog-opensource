@@ -277,7 +277,7 @@ git commit -m "feat(admin): add studio content management"
 
 ```bash
 npx vitest run tests/lib/post-render.test.ts
-git grep -n -E 'wudichen|CLOUDFLARE_API_TOKEN=[^$]|ADMIN_PASSWORD=[^你的]' -- ':!package-lock.json' ':!.env.example' || true
+git grep -n -E 'CLOUDFLARE_API_TOKEN=[^$]|ADMIN_PASSWORD=[^你的]' -- ':!package-lock.json' ':!.env.example' || true
 git diff --check
 git add lib/post-render.ts tests/lib/post-render.test.ts 'app/[slug]/page.tsx' components/SiteHeader.tsx components/themes/HomeVariantB.tsx components/themes/HomeVariantC.tsx app/admin/'(protected)'/settings/NavLinksEditor.tsx app/admin/login/page.tsx package.json README.md AGENTS.md lib/site-config.ts
 git commit -m "fix(site): close identity and article semantics gaps"
