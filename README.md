@@ -87,6 +87,7 @@
 | `ADMIN_PASSWORD` | 后台登录密码 |
 | `ADMIN_TOKEN_SALT` | Token 加盐（`openssl rand -hex 32`） |
 | `AI_CONFIG_ENCRYPTION_SECRET` | AI 配置加密密钥（`openssl rand -hex 32`） |
+| `HERMES_SYNC_TOKEN` | Hermes 知识同步专用 Token（`openssl rand -hex 32`） |
 | `NEXT_PUBLIC_SITE_URL` | 站点域名 |
 | `AI_API_KEY` | AI 模型 API Key（可选，后台也可配置） |
 
